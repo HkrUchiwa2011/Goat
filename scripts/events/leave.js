@@ -19,13 +19,13 @@ module.exports = {
 			defaultLeaveMessage: "{userName} đã {type} khỏi nhóm"
 		},
 		en: {
-			session1: "🤣",
-			session2: "😗",
-			session3: "🤧",
-			session4: "😐",
-			leaveType1: "𝗘𝘂𝗵....",
-			leaveType2: "𝗟'𝗮𝗱𝗺𝗶𝗻 𝗱𝗲 𝗰𝗲 𝗴𝗿𝗼𝘂𝗽𝗲 𝗮 𝗮𝗶𝗱𝗲́",
-			defaultLeaveMessage: "{type} {userName} 𝗮̀ 𝗾𝘂𝗶𝘁𝘁𝗲𝗿 𝗹𝗲 𝗴𝗿𝗼𝘂𝗽𝗲 𝗽𝗼𝘂𝗿 𝗶𝗻𝗳𝗼 {session}{session}{session}"
+			session1: "morning",
+			session2: "noon",
+			session3: "afternoon",
+			session4: "evening",
+			leaveType1: "left",
+			leaveType2: "was kicked from",
+			defaultLeaveMessage: "{userName} a fui😂 \nTellement il ne supportait plus. Bref un déchet de moins. Je suis tellement content qu'il ai quitté le groupe."
 		}
 	},
 
@@ -95,4 +95,4 @@ module.exports = {
 				message.send(form);
 			};
 	}
-};};
+};
