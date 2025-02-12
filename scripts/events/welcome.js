@@ -22,27 +22,14 @@ module.exports = {
 			defaultWelcomeMessage: "Xin chào {userName}.\nChào mừng bạn đến với {boxName}.\nChúc bạn có buổi {session} vui vẻ!"
 		},
 		en: {
-			session1: "matin",
-			session2: "midi",
-			session3: "après-midi",
-			session4: "soir",
-			welcomeMessage: [
-				"Qui vient de m'ajouter ? C'est qui cet imbécile ? Non je rigole... ou pas. Merci pour l'invitation !\nPréfixe du bot : %1\nTape %1help avant que je m'énerve !",
-				"Super... encore un groupe. J’espère que vous êtes au moins drôles. Préfixe : %1\nUtilise %1help, sinon je pars.",
-				"Je n'ai rien demandé et pourtant me voilà. Bon... salut tout le monde !\nPréfixe du bot : %1\nTape %1help pour voir mes commandes.",
-				"Félicitations ! Vous avez débloqué un bot sarcastique ! Préfixe : %1\nUtilise %1help avant que je change d’avis.",
-				"Nouveau groupe, nouveaux ennuis... Bon, on commence ?\nPréfixe : %1\nTape %1help et fais pas l’ignorant."
-			],
-			multiple1: "toi",
-			multiple2: "vous",
-			defaultWelcomeMessage: [
-				"Hey {userName}, bienvenue dans {boxName} !\nJ’espère que tu survivras à ce {session}.",
-				"Une nouvelle âme piégée dans {boxName}. Bienvenue, {userName} ! Pas de retour en arrière.",
-				"{userName} vient d’entrer dans {boxName} ! Accroche-toi, ça va secouer !",
-				"Nouveau challenger détecté : {userName} ! Bienvenue dans {boxName}.\nEssaie de tenir le coup !",
-				"Alerte générale ! {userName} a rejoint {boxName}.\nSoyez sympas… ou faites-lui peur.",
-				"Tiens tiens, qui voilà ? {userName}, bienvenue dans {boxName}. Aucun remboursement possible !"
-			]
+			session1: "morning",
+			session2: "noon",
+			session3: "afternoon",
+			session4: "evening",
+			welcomeMessage: "Je peux savoir qui est l'imbécile qui m'a ajouté dans ce groupe. Mais bon Merci 🥲!\nBot prefix: %1\nTu veux m/utiliser à ta guise et pour voir la liste de mes commandes tape: %1help",
+			multiple1: "you",
+			multiple2: "you guys",
+			defaultWelcomeMessage: `Salut le con. Comment il s'appelle déjà ? 🤔 Ah voilà\n{userName}.\nMauvaise venue {multiple} dans ce groupe de nul :{boxName}\nBienvenue en enfer 😈`
 		}
 	},
 
