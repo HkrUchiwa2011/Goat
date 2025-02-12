@@ -22,14 +22,13 @@ module.exports = {
       const word = event.body.toLowerCase();
       const triggerWords = ["hi", "hello", "hey", "hiya", "greetings", "salutations", "howdy"];
       const replies = [
-        "𝗛𝗲𝘆 𝗕𝗮𝗸𝗮 𝗛𝗮𝘃𝗲 𝗔 𝗪𝗼𝗻𝗱𝗲𝗿𝗳𝘂𝗹 𝗗𝗮𝘆🙂",
+        "Qui t'a donné la permission de me saluer🙂",
         "Hello! How can I assist you today? 😊",
-        "Hey there! What's up? 👋",
-        "Hi! Hope you're having a great day! 🌟",
-        "Greetings! How are you doing today? 🤗",
-        "Hiya! Anything exciting happening? 😃",
-        "Hello! Need any help? 🛠",
-        "Hey! What's new with you? 📰"
+        "Salut le minable que veux-tu ?",
+        "Arrête bordelement de saluer et pose ta question 🌟",
+        "C'est une première. Depuis quand tu salue toi? ? T'as une meuf ? 😅 🤗",
+        "Tu me salue avec respect, ok? 😃",
+        "Je déteste les salutations. Et ça me met en rogne que ça soit toi, le nul🛠",
       ];
 
       if (triggerWords.includes(word)) {
