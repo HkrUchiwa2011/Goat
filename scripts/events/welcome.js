@@ -22,14 +22,27 @@ module.exports = {
 			defaultWelcomeMessage: "Xin chào {userName}.\nChào mừng bạn đến với {boxName}.\nChúc bạn có buổi {session} vui vẻ!"
 		},
 		en: {
-			session1: "morning",
-			session2: "noon",
-			session3: "afternoon",
-			session4: "evening",
-			welcomeMessage: "Thank you for inviting me to the group!\nBot prefix: %1\nTo view the list of commands, please enter: %1help",
-			multiple1: "you",
-			multiple2: "you guys",
-			defaultWelcomeMessage: `Hello {userName}.\nWelcome {multiple} to the chat group: {boxName}\nHave a nice {session} 😊`
+			session1: "matin",
+			session2: "midi",
+			session3: "après-midi",
+			session4: "soir",
+			welcomeMessage: [
+				"Qui vient de m'ajouter ? C'est qui cet imbécile ? Non je rigole... ou pas. Merci pour l'invitation !\nPréfixe du bot : %1\nTape %1help avant que je m'énerve !",
+				"Super... encore un groupe. J’espère que vous êtes au moins drôles. Préfixe : %1\nUtilise %1help, sinon je pars.",
+				"Je n'ai rien demandé et pourtant me voilà. Bon... salut tout le monde !\nPréfixe du bot : %1\nTape %1help pour voir mes commandes.",
+				"Félicitations ! Vous avez débloqué un bot sarcastique ! Préfixe : %1\nUtilise %1help avant que je change d’avis.",
+				"Nouveau groupe, nouveaux ennuis... Bon, on commence ?\nPréfixe : %1\nTape %1help et fais pas l’ignorant."
+			],
+			multiple1: "toi",
+			multiple2: "vous",
+			defaultWelcomeMessage: [
+				"Hey {userName}, bienvenue dans {boxName} !\nJ’espère que tu survivras à ce {session}.",
+				"Une nouvelle âme piégée dans {boxName}. Bienvenue, {userName} ! Pas de retour en arrière.",
+				"{userName} vient d’entrer dans {boxName} ! Accroche-toi, ça va secouer !",
+				"Nouveau challenger détecté : {userName} ! Bienvenue dans {boxName}.\nEssaie de tenir le coup !",
+				"Alerte générale ! {userName} a rejoint {boxName}.\nSoyez sympas… ou faites-lui peur.",
+				"Tiens tiens, qui voilà ? {userName}, bienvenue dans {boxName}. Aucun remboursement possible !"
+			]
 		}
 	},
 
