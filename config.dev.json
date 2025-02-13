@@ -21,11 +21,11 @@
   ],
   "whiteListMode": {
     "enable": false,
-    "whiteListIds": [],
+    "whiteListIds": [61563822463333],
     "notes": "if you enable this feature, only the ids in the whiteListIds section can use the bot"
   },
   "nickNameBot": "━╬٨ـﮩ𝕌𝕔𝕙𝕚𝕨𝕒𝕓𝕠𝕥ﮩ❤٨ـﮩﮩـ╬━",
-  "prefix": "&",
+  "prefix": "/",
   "database": {
     "type": "sqlite",
     "uriMongodb": "",
