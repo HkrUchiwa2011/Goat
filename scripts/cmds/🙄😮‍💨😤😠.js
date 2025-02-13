@@ -1,6 +1,6 @@
 module.exports = {
   config: {
-    name: "🙄😮‍💨😤😠😡",
+    name: "🙄😮‍💨😤😠",
     version: "1.0",
     author: "Ghost",
     countDown: 5,
@@ -99,26 +99,6 @@ module.exports = {
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       return message.reply(randomResponse);
     }
-
-    // Réponses pour l'emoji 😡
-    if (emoji === "😡") {
-      const responses = [
-        "Wow, cette colère. T’es sûr que c’est pas juste ton ego qui est trop fragile ?",
-        "Si tu penses que cette rage va impressionner quelqu’un, détrompe-toi. C’est plus pathétique qu’autre chose.",
-        "T’es vraiment en colère pour ça ? T’as bien choisi tes priorités dans la vie.",
-        "Si t’as aussi peu de contrôle sur tes émotions, peut-être qu’il est temps de repenser ta vie.",
-        "Fais attention, cette rage pourrait te coûter plus que tu ne crois. Regarde-toi, tu es ridicule.",
-        "Tu veux te calmer ou tu préfères rester là à nous montrer à quel point tu es facile à énerver ?",
-        "T’es furieux à ce point ? Ce n’est même pas suffisant pour faire bouger une mouche.",
-        "C’est mignon, vraiment. Un grand adulte qui pleure pour un rien. Quelle maturité.",
-        "Tu veux un câlin ou t’as l’intention de rester dans cet état de rage complètement inutile ?",
-        "Ton visage semble dire 'je vais exploser', mais honnêtement, c’est plutôt un gâchis d’énergie.",
-        "Sérieusement, t’as l’air de faire une scène pour rien. Détends-toi, tu n’es même pas une star du cinéma.",
-        "Si t’es aussi enragé pour des petites choses, t’as une vie misérable à gérer.",
-        "On dirait une version humaine de la colère qui ne mène à rien. Bien joué.",
       ];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      return message.reply(randomResponse);
-    }
   }
 };
