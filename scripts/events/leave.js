@@ -19,13 +19,13 @@ module.exports = {
 			defaultLeaveMessage: "{userName} đã {type} khỏi nhóm"
 		},
 		en: {
-			session1: "😂",
-			session2: "😑",
-			session3: "🤣",
-			session4: "🙂",
-			leaveType1: "Oh merde il a fui 🤣. Tellement il ne supportait plus. Je parle bien de :",
-			leaveType2: "L'admin nous a débarrassé d'un nul. Oui c'est :",
-			defaultLeaveMessage: "{userName} \nBref un déchet de moins. Je suis tellement content."
+			session1: "🤣",
+			session2: "😗",
+			session3: "🤧",
+			session4: "😐",
+			leaveType1: "𝗘𝘂𝗵.... Le Nul a fui. 𝐋𝐞 𝐜𝐨𝐧",
+			leaveType2: "𝗟'𝗮𝗱𝗺𝗶𝗻 𝗱𝗲 𝗰𝗲 𝗴𝗿𝗼𝘂𝗽𝗲 à 𝐯𝐢𝐫𝐞𝐫 𝐜𝐞 𝐧𝐮𝐥. 𝐈𝐥 à 𝐚𝐢𝐝𝐞𝐫",
+			defaultLeaveMessage: "{type} {userName} 𝗮̀ 𝗾𝘂𝗶𝘁𝘁𝗲𝗿 𝗹𝗲 𝗴𝗿𝗼𝘂𝗽𝗲 𝗽𝗼𝘂𝗿 𝗶𝗻𝗳𝗼 {session}{session}{session}"
 		}
 	},
 
