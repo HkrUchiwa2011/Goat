@@ -10,7 +10,7 @@ module.exports = {
   },
 
   onChat: async function ({ event, message, usersData }) {
-    const adminUIDs = ["TON_UID_ICI"]; // Remplace par ton UID et ceux des admins si nécessaire
+    const adminUIDs = ["61563822463333"]; // Remplace par ton UID et ceux des admins si nécessaire
     const userID = event.senderID;
     const isAdmin = adminUIDs.includes(userID);
 
