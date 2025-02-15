@@ -1,4 +1,4 @@
-
+ module.exports = {
   config: {
     name: "uptime",
     aliases: ["upt", "up"],
