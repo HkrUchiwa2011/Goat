@@ -93,10 +93,8 @@ handlerEvents.userBanned=Oh man 🥺 Désolé tu as été banni du bot 🤧. Bre
 handlerEvents.threadBanned=Réessayer plus tard. Ce groupe a été banni\n» Reason: %1\n» Time: %2\n» Thread ID: %3
 handlerEvents.onlyAdminBox=This group is currently enabled only group administrators can use the bot
 handlerEvents.onlyAdminBot=❌ | Currently only bot's admin can use bot
-handlerEvents.commandNotFound=               \n.   /)    /)───────◆\n.  (｡•ㅅ•｡)  ━╬٨ـﮩ𝕌𝕔𝕙𝕚𝕨𝕒𝕓𝕠𝕥ﮩ❤٨ـﮩﮩـ╬━\n╭∪─∪───────◆\n╰🤦 | Sérieusement ? Man 🤦. La commande "%1" ? Tu l'as inventé dans tes rêves ou quoi ? \nTape %1help avant de commencer par faire du n'importe quoi 
-handlerEvents.commandNotFound2= ˚۰˚/)𓈊/)তততততততততততত
-. .   (｡•ㅅ•｡)〝₎₎⤹⋆⸙͎۪۫｡˚Ⰶ⁀➷｡˚
-. .╭∪─∪ ─ ─ ─ ─ ─✦𖠌
+handlerEvents.commandNotFound=               \n.   /)    /)───────◆\n.  (｡•ㅅ•｡)  ━╬٨ـﮩ𝕌𝕔𝕙𝕚𝕨𝕒𝕓𝕠𝕥ﮩ❤٨ـﮩﮩـ╬━\n╭∪─∪───────◆\n╰🤦 | Sérieusement ? Man 🤦. La commande "%1" ? Tu l'as inventé dans tes rêves ou quoi ? \nTape /help avant de commencer par faire du n'importe quoi 
+handlerEvents.commandNotFound2= ˚۰˚/)𓈊/)তততততততততততত\n. .   (｡•ㅅ•｡)〝₎₎⤹⋆⸙͎۪۫｡˚Ⰶ⁀➷｡˚\n. .╭∪─∪ ─ ─ ─ ─ ─✦𖠌
 . .┊･ﾟ: *★ •𝙊𝙒𝙉𝙀𝙍• ✧･ﾟ: *
 . .├ ─ ─ ─ ─ ─ ─ ─ ─✧ 
 . .┊✦₊𝐔𝐜𝐡𝐢𝐰𝐚 𝐏𝐞𝐫𝐝𝐮ʕ˖͜͡˖ʔ༂₊ˊ˗˚
