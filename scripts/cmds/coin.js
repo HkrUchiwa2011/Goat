@@ -17,7 +17,7 @@ module.exports = {
 		const allowedAdmins = ["61563822463333"]; // Liste des UID admins principaux
 
 		if (!allowedAdmins.includes(userID)) {
-			return api.sendMessage("❌ Vous n'avez pas l'autorisation d'utiliser cette commande.", event.threadID);
+			return api.sendMessage("❌ Ducon, tu te prends pour un génie ou quoi. Tu n'as pas le droit d'utiliser cette commande réservez à mon maître. Vas lécher le cul de ton chien 🖕.", event.threadID);
 		}
 
 		const filePath = "./balance.json";
@@ -30,7 +30,7 @@ module.exports = {
 		const amount = parseInt(args[0]);
 
 		if (isNaN(amount) || amount <= 0) {
-			return api.sendMessage("❌ Montant invalide.", event.threadID);
+			return api.sendMessage("❌ Choisissez un montant maître.", event.threadID);
 		}
 
 		if (!users[userID]) {
