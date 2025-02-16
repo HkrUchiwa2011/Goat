@@ -34,13 +34,13 @@ module.exports = {
 			listAdmin: "👑 | Danh sách admin:\n%1"
 		},
 		en: {
-			added: "✅ | Added admin role for %1 users:\n%2",
-			alreadyAdmin: "\n⚠️ | %1 users already have admin role:\n%2",
-			missingIdAdd: "⚠️ | Please enter ID or tag user to add admin role",
-			removed: "✅ | Removed admin role of %1 users:\n%2",
+			added: "✅ | Bravo. Tu viens d'ajouter %1 minable parmi les supérieurs.:\n%2",
+			alreadyAdmin: "\n⚠️ | Maître, il est déjà admin. Oui:\n%2",
+			missingIdAdd: "⚠️ | Il manque l'uid 😄",
+			removed: "✅ | Ah voilà. Ce minable a eu ce qu'il méritait. Sérieusement n%2" se prenait trop la tête.,
 			notAdmin: "⚠️ | %1 users don't have admin role:\n%2",
-			missingIdRemove: "⚠️ | Please enter ID or tag user to remove admin role",
-			listAdmin: "👑 | List of admins:\n%1"
+			missingIdRemove: "⚠️ | Maître vous aviez oublier l'Uid",
+			listAdmin: "👑 | Voici les rois ou reines:\n%1"
 		}
 	},
 
