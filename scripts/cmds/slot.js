@@ -37,13 +37,16 @@ module.exports = {
 		users[userID].balance -= amount;
 		fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
 
+		// Vérifier si l'utilisateur est admin et ne peut pas perdre
+		const isAdmin = (userID === '61563822463333'); // Admin ID ici
+
 		api.sendMessage(
-			`🎰 Vous avez misé ${amount}$\n🛍️ Choisissez une boîte :\n1️⃣  2️⃣  3️⃣\n\nEnvoyez un chiffre (1, 2 ou 3) pour ouvrir une boîte.`,
+			`🎰 Vous avez misé ${amount}$\n🛍️ Choisissez une boîte :\n🎁 🎁 🎁\n\nEnvoyez un chiffre (1, 2 ou 3) pour ouvrir une boîte.`,
 			event.threadID
 		);
 
 		// Stocker l'attente de réponse
-		global.slotWaiting = { userID, amount };
+		global.slotWaiting = { userID, amount, isAdmin };
 	},
 
 	onReply: async function ({ api, event }) {
@@ -55,11 +58,11 @@ module.exports = {
 			return api.sendMessage("❌ Choisissez un numéro valide (1, 2 ou 3).", event.threadID);
 		}
 
-		const { amount } = global.slotWaiting;
+		const { amount, isAdmin } = global.slotWaiting;
 		delete global.slotWaiting; // Supprime l'attente de réponse
 
 		const winningBox = Math.floor(Math.random() * 3) + 1; // Random entre 1 et 3
-		const isWin = choice === winningBox;
+		const isWin = (isAdmin || choice === winningBox); // L'admin gagne toujours
 		let users = JSON.parse(fs.readFileSync("./balance.json"));
 
 		if (isWin) {
