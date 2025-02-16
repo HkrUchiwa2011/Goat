@@ -1,4 +1,5 @@
 const moment = require("moment-timezone");
+const fs = require("fs");
 
 module.exports = {
 	config: {
@@ -75,18 +76,35 @@ module.exports = {
 		const currentDay = date.getDay(); // 0: sunday, 1: monday, 2: tuesday, 3: wednesday, 4: thursday, 5: friday, 6: saturday
 		const { senderID } = event;
 
-		const userData = await usersData.get(senderID);
-		if (userData.data.lastTimeGetReward === dateTime)
+		// Charger les utilisateurs et leur solde
+		const filePath = "./balance.json";
+		let users = {};
+		if (fs.existsSync(filePath)) {
+			users = JSON.parse(fs.readFileSync(filePath));
+		}
+
+		// Si l'utilisateur n'existe pas, on lui attribue un solde initial de 100$
+		if (!users[senderID]) {
+			users[senderID] = { balance: 100 };
+			fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+		}
+
+		// Vérifier si l'utilisateur a déjà reçu sa récompense
+		if (users[senderID].lastTimeGetReward === dateTime)
 			return message.reply(getLang("alreadyReceived"));
 
+		// Calculer les coins et l'EXP à recevoir
 		const getCoin = Math.floor(reward.coin * (1 + 20 / 100) ** ((currentDay == 0 ? 7 : currentDay) - 1));
 		const getExp = Math.floor(reward.exp * (1 + 20 / 100) ** ((currentDay == 0 ? 7 : currentDay) - 1));
-		userData.data.lastTimeGetReward = dateTime;
-		await usersData.set(senderID, {
-			money: userData.money + getCoin,
-			exp: userData.exp + getExp,
-			data: userData.data
-		});
+
+		// Mettre à jour les données de l'utilisateur dans balance.json
+		users[senderID].lastTimeGetReward = dateTime;
+		users[senderID].balance += getCoin; // Ajouter les coins à son solde
+
+		// Sauvegarder les modifications
+		fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+
+		// Répondre à l'utilisateur
 		message.reply(getLang("received", getCoin, getExp));
 	}
 };
