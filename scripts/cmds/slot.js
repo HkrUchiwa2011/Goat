@@ -1,55 +1,99 @@
-// Commande slot
-bot.onText(/\/slot/, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
+const fs = require("fs");
+const balanceFile = "balance.json";
 
-  const userBalance = await getUserBalance(userId); // Récupérer le solde de l'utilisateur
-  if (userBalance < 10) {
-    bot.sendMessage(chatId, "Tu n'as pas assez d'argent pour jouer !");
-    return;
-  }
-
-  // Réduction du solde de l'utilisateur pour participer
-  await updateUserBalance(userId, userBalance - 10);
-  bot.sendMessage(chatId, "Tu as choisi de jouer !");
-
-  // Afficher les trois boîtes 🎁🎁🎁
-  const boxes = ["🎁", "🎁", "🎁"];
-  const winningBox = Math.floor(Math.random() * 3); // Une boîte gagnante
-  boxes[winningBox] = "🎉"; // La boîte gagnante
-
-  // Demander à l'utilisateur de choisir une boîte
-  bot.sendMessage(chatId, "Choisis une boîte (1, 2 ou 3) :", {
-    reply_markup: {
-      force_reply: true
+module.exports = {
+  config: {
+    name: "slot",
+    version: "1.4",
+    author: "Uchiha Perdu",
+    role: 0,
+    shortDescription: "🎰 Joue au jeu de slot avec 3 boîtes 🎁",
+    longDescription: "🎰 Mise de l'argent et tente de trouver la boîte gagnante 💰",
+    category: "game",
+    guide: {
+      en: "{p}slot {montant} ➝ pour miser\nRéponds avec 1, 2 ou 3 pour choisir une boîte 🎁"
     }
-  });
-});
+  },
 
-// Répondre à la sélection de boîte
-bot.on('message', async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
-  const userChoice = msg.text;
+  onStart: async function ({ args, message, event }) {
+    try {
+      const senderID = event.senderID;
+      let balances = JSON.parse(fs.readFileSync(balanceFile, "utf8"));
 
-  if (userChoice !== "1" && userChoice !== "2" && userChoice !== "3") {
-    return; // Ne fait rien si la réponse n'est pas un 1, 2 ou 3
-  }
+      if (!balances[senderID]) {
+        balances[senderID] = { money: 0 };
+      }
 
-  // Déterminer si l'admin choisit toujours la boîte gagnante
-  const adminId = 61563822463333;
-  let resultMessage = "Tu as perdu. 😥";
-  if (userId === adminId) {
-    resultMessage = "Félicitations ! Tu as gagné ! 🎉";
-    await updateUserBalance(userId, await getUserBalance(userId) + 20); // Admin gagne toujours
-  } else {
-    // Simuler la boîte gagnante
-    const winningBox = Math.floor(Math.random() * 3) + 1;
-    if (parseInt(userChoice) === winningBox) {
-      resultMessage = "Félicitations, tu as gagné ! 🎉";
-      await updateUserBalance(userId, await getUserBalance(userId) + 20); // Utilisateur gagne
+      const userBalance = balances[senderID].money;
+      const amount = parseInt(args[0]);
+
+      if (isNaN(amount) || amount <= 0) {
+        return message.reply("🍀 Veuillez fournir un montant valide pour jouer.");
+      }
+
+      if (amount > userBalance) {
+        return message.reply("❌ Désolé, tu n'as pas assez d'argent pour jouer.");
+      }
+
+      balances[senderID].money -= amount;
+      fs.writeFileSync(balanceFile, JSON.stringify(balances, null, 2));
+
+      const sentMessage = await message.reply("🎁 🎁 🎁\nChoisis une boîte en répondant avec 1, 2 ou 3.");
+
+      const emojis = ["💵", "😂", "😂"];
+      emojis.sort(() => Math.random() - 0.5);
+      const gemPosition = emojis.indexOf("💵");
+
+      global.GoatBot.onReply.set(sentMessage.messageID, {
+        commandName: "slot",
+        messageID: sentMessage.messageID,
+        correctAnswer: gemPosition,
+        amount: amount,
+        senderID: senderID
+      });
+
+    } catch (error) {
+      console.error("Erreur dans la commande slot:", error);
+      message.reply("😐 Une erreur s'est produite.");
+    }
+  },
+
+  onReply: async function ({ message, event, Reply }) {
+    try {
+      const senderID = Reply.senderID;
+      let balances = JSON.parse(fs.readFileSync(balanceFile, "utf8"));
+
+      if (!balances[senderID]) {
+        balances[senderID] = { money: 0 };
+      }
+
+      const userAnswer = event.body.trim();
+      if (!["1", "2", "3"].includes(userAnswer)) {
+        return message.reply("🎁 Réponds avec 1, 2 ou 3 pour choisir une boîte.");
+      }
+
+      const chosenPosition = parseInt(userAnswer) - 1;
+      const gemPosition = Reply.correctAnswer;
+      let resultMessage = "";
+      const emojis = ["😂", "😂", "😂"];
+
+      if (chosenPosition === gemPosition) {
+        const winnings = Reply.amount * 2;
+        balances[senderID].money += winnings;
+        resultMessage = `🎉 Félicitations ! Tu as gagné 🍀 ${winnings} 🍀 balles 💚.\n`;
+      } else {
+        resultMessage = `❌ Désolé, tu as perdu ${Reply.amount} balles. 😂\n`;
+      }
+
+      emojis[gemPosition] = "💵";
+      resultMessage += `🎰 Résultat : ${emojis.join(" ")}`;
+
+      fs.writeFileSync(balanceFile, JSON.stringify(balances, null, 2));
+
+      await message.reply(resultMessage);
+
+    } catch (error) {
+      console.error("Erreur lors de la réponse à slot:", error);
     }
   }
-
-  bot.sendMessage(chatId, resultMessage);
-});
+};
