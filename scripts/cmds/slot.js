@@ -1,92 +1,55 @@
-const fs = require("fs");
+// Commande slot
+bot.onText(/\/slot/, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
 
-module.exports = {
-	config: {
-		name: "slot",
-		version: "1.0",
-		author: "L'Uchiha Perdu",
-		countDown: 3,
-		role: 0,
-		shortDescription: { en: "Slot game" },
-		description: { en: "Un jeu de hasard avec des cadeaux" },
-		category: "🎰 Jeux",
-		guide: { en: "/slot <montant>" }
-	},
+  const userBalance = await getUserBalance(userId); // Récupérer le solde de l'utilisateur
+  if (userBalance < 10) {
+    bot.sendMessage(chatId, "Tu n'as pas assez d'argent pour jouer !");
+    return;
+  }
 
-	onStart: async function ({ api, args, event }) {
-		const userID = event.senderID;
-		let amount = parseInt(args[0]);
+  // Réduction du solde de l'utilisateur pour participer
+  await updateUserBalance(userId, userBalance - 10);
+  bot.sendMessage(chatId, "Tu as choisi de jouer !");
 
-		if (isNaN(amount) || amount < 50) {
-			return api.sendMessage("❌ Mise au moins une somme supérieure à 50$, ducon", event.threadID);
-		}
+  // Afficher les trois boîtes 🎁🎁🎁
+  const boxes = ["🎁", "🎁", "🎁"];
+  const winningBox = Math.floor(Math.random() * 3); // Une boîte gagnante
+  boxes[winningBox] = "🎉"; // La boîte gagnante
 
-		// Sauvegarde du solde dans un fichier JSON
-		let users = {};
-		const filePath = "./balance.json";
+  // Demander à l'utilisateur de choisir une boîte
+  bot.sendMessage(chatId, "Choisis une boîte (1, 2 ou 3) :", {
+    reply_markup: {
+      force_reply: true
+    }
+  });
+});
 
-		if (fs.existsSync(filePath)) {
-			users = JSON.parse(fs.readFileSync(filePath));
-		}
+// Répondre à la sélection de boîte
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const userChoice = msg.text;
 
-		if (!users[userID] || users[userID].balance < amount) {
-			return api.sendMessage("💰 Vous n'avez pas assez d'argent pour cette mise.", event.threadID);
-		}
+  if (userChoice !== "1" && userChoice !== "2" && userChoice !== "3") {
+    return; // Ne fait rien si la réponse n'est pas un 1, 2 ou 3
+  }
 
-		// Déduire la mise
-		users[userID].balance -= amount;
-		fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+  // Déterminer si l'admin choisit toujours la boîte gagnante
+  const adminId = 61563822463333;
+  let resultMessage = "Tu as perdu. 😥";
+  if (userId === adminId) {
+    resultMessage = "Félicitations ! Tu as gagné ! 🎉";
+    await updateUserBalance(userId, await getUserBalance(userId) + 20); // Admin gagne toujours
+  } else {
+    // Simuler la boîte gagnante
+    const winningBox = Math.floor(Math.random() * 3) + 1;
+    if (parseInt(userChoice) === winningBox) {
+      resultMessage = "Félicitations, tu as gagné ! 🎉";
+      await updateUserBalance(userId, await getUserBalance(userId) + 20); // Utilisateur gagne
+    }
+  }
 
-		// Vérifier si l'utilisateur est admin et ne peut pas perdre
-		const isAdmin = (userID === '61563822463333'); // Admin ID ici
-
-		api.sendMessage(
-			`🎰 Vous avez misé ${amount}$\n🛍️ Choisissez une boîte :\n🎁 🎁 🎁\n\nEnvoyez un chiffre (1, 2 ou 3) pour ouvrir une boîte.`,
-			event.threadID
-		);
-
-		// Stocker l'attente de réponse
-		global.slotWaiting = { userID, amount, isAdmin };
-	},
-
-	onReply: async function ({ api, event }) {
-		const userID = event.senderID;
-		if (!global.slotWaiting || global.slotWaiting.userID !== userID) return;
-
-		const choice = parseInt(event.body);
-		if (![1, 2, 3].includes(choice)) {
-			return api.sendMessage("❌ Choisissez un numéro valide (1, 2 ou 3).", event.threadID);
-		}
-
-		const { amount, isAdmin } = global.slotWaiting;
-		delete global.slotWaiting; // Supprime l'attente de réponse
-
-		const winningBox = Math.floor(Math.random() * 3) + 1; // Random entre 1 et 3
-		const isWin = (isAdmin || choice === winningBox); // L'admin gagne toujours
-		let users = JSON.parse(fs.readFileSync("./balance.json"));
-
-		if (isWin) {
-			const prize = amount * amount;
-			users[userID].balance += prize;
-			fs.writeFileSync("./balance.json", JSON.stringify(users, null, 2));
-
-			const winMessages = [
-				`🎉 Bravo, vous avez gagné ${prize}$ ! 🤑`,
-				`🔥 Jackpot ! Vous empochez ${prize}$ ! 🎰`,
-				`💰 Félicitations ! Vous avez trouvé le bon cadeau et gagné ${prize}$ ! 🎁`,
-				`🏆 Quelle chance ! Vous remportez ${prize}$ ! 🎊`
-			];
-
-			api.sendMessage(winMessages[Math.floor(Math.random() * winMessages.length)], event.threadID);
-		} else {
-			const loseMessages = [
-				`😮‍💨 Oups... ce n'était pas la bonne boîte. Vous perdez ${amount}$.`,
-				`💀 Mauvaise pioche... Vous repartez sans gains.`,
-				`🤦‍♂️ Dommage... La boîte gagnante était la ${winningBox}.`,
-				`📉 Pas de chance... La prochaine fois peut-être ?`
-			];
-
-			api.sendMessage(loseMessages[Math.floor(Math.random() * loseMessages.length)], event.threadID);
-		}
-	}
-};
+  bot.sendMessage(chatId, resultMessage);
+});
