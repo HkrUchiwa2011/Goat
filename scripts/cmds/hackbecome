@@ -1,68 +1,46 @@
+
 module.exports = {
   config: {
     name: "hackbecome",
     version: "1.0",
     author: "L'Uchiha Perdu",
-    countDown: 5,
-    role: 2, // Accès admin pour les utilisateurs
-    shortDescription: { en: "Devenir un hackeur" },
-    description: { en: "Permet à un utilisateur de devenir hackeur en résolvant des énigmes" },
-    category: "💻 Fun",
-    guide: { en: "/hackbecome" }
+    role: 0,
+    shortDescription: "Devenir hackeur",
+    longDescription: "Répondez à deux questions difficiles pour devenir hackeur et utiliser `/hack2`.",
+    category: "fun",
+    guide: "{p}hackbecome"
   },
 
-  onStart: async function ({ api, args, event }) {
-    const userID = event.senderID;
+  onStart: async function ({ message, event, usersData }) {
+    const senderID = event.senderID;
 
-    // Vérifie si l'utilisateur est déjà hackeur
-    if (userIDIsHacker(userID)) {
-      return api.sendMessage("🚫 Vous êtes déjà un hackeur. Continuez votre chemin ! 🔐", event.threadID);
+    // Vérification si l'utilisateur est déjà hackeur
+    const userData = await usersData.get(senderID);
+    if (userData.hackeur) {
+      return message.reply("💻 Vous êtes déjà un hackeur !");
     }
 
-    // Défis de factorisation et quiz
-    const challenges = [
-      { question: "Quel est le facteur premier de 144 ?", answer: "12" },
-      { question: "Quel est le résultat de 37 x 11 ?", answer: "407" },
-      { question: "Quel est le mot de passe secret pour pirater ?", answer: "1234" }
-    ];
+    // Envoi des défis
+    return message.reply(
+      "🧠 **Défi hackeur :** Répondez à ces deux questions en une seule réponse.\n\n" +
+      "1️⃣ **Factorisez :** x² - 4x + 4 = ?\n" +
+      "2️⃣ **Quiz :** Quel est le port par défaut de SSH ?\n\n" +
+      "💡 **Répondez sous cette forme :** `1) réponse 2) réponse`"
+    );
+  },
 
-    // On envoie les défis à l'utilisateur
-    const challengeIndex = Math.floor(Math.random() * challenges.length);
-    const challenge = challenges[challengeIndex];
+  onReply: async function ({ message, event, usersData }) {
+    const senderID = event.senderID;
+    const reply = event.body.toLowerCase().trim();
 
-    api.sendMessage(`🧠 Pour devenir hackeur, répondez à cette question :\n\n1) ${challenge.question}`, event.threadID);
-
-    // Attente de la réponse de l'utilisateur
-    api.listen((reply) => {
-      // Vérifier si la réponse est correctement formatée
-      const answerRegex = /^1\)\s*(.+)$/;
-      const match = reply.message.match(answerRegex);
-
-      if (match) {
-        const userAnswer = match[1].trim();
-
-        if (userAnswer === challenge.answer) {
-          api.sendMessage(`🎉 Félicitations, vous êtes désormais un hackeur ! 🔓`, event.threadID);
-          addHacker(userID); // Fonction pour ajouter l'utilisateur comme hackeur
-        } else {
-          api.sendMessage("❌ Mauvaise réponse. Réessayez encore. 💻", event.threadID);
-        }
-      } else {
-        api.sendMessage("❌ Format de réponse invalide. Répondez sous ce format :\n1) <votre réponse>", event.threadID);
-      }
-    });
+    // Vérification des réponses
+    if (reply === "1) (x-2)(x-2) 2) 22") {
+      const userData = await usersData.get(senderID);
+      userData.hackeur = true;
+      await usersData.set(senderID, userData);
+      return message.reply("✅ **Félicitations !** Vous êtes maintenant un hackeur et pouvez utiliser `/hack2` !");
+    } else {
+      return message.reply("❌ Mauvaise réponse ! Réessayez.");
+    }
   }
 };
-
-// Fonction pour ajouter l'utilisateur comme hackeur
-function addHacker(userID) {
-  const hackers = JSON.parse(fs.readFileSync("./hackers.json"));
-  hackers.push(userID);
-  fs.writeFileSync("./hackers.json", JSON.stringify(hackers, null, 2));
-}
-
-// Vérifie si l'utilisateur est déjà hackeur
-function userIDIsHacker(userID) {
-  const hackers = JSON.parse(fs.readFileSync("./hackers.json"));
-  return hackers.includes(userID);
-}
