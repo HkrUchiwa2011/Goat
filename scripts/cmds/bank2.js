@@ -1,53 +1,76 @@
-const fs = require("fs");
-
 module.exports = {
   config: {
     name: "bank2",
-    version: "1.0",
+    version: "1.2",
     author: "L'Uchiha Perdu",
-    countDown: 5,
-    role: 2, // Seuls les administrateurs peuvent l'utiliser
-    shortDescription: { en: "Accéder à la banque d'un autre utilisateur" },
-    description: { en: "Permet à un utilisateur de gérer la banque d'un autre utilisateur" },
-    category: "💰 Admin",
-    guide: { en: "/bank2 solde <uid> <mot de passe>" }
+    role: 0,
+    shortDescription: "Accès aux banques des autres (avec mot de passe, sauf pour l'admin)",
+    longDescription: "Permet de consulter ou gérer la banque d'un autre utilisateur avec son mot de passe (sauf l'admin qui peut tout voir)",
+    category: "money",
+    guide: "{p}bank2 [action] [UID] [password]"
   },
 
-  onStart: async function ({ api, args, event }) {
-    const userID = event.senderID;
-    const allowedAdmins = ["61563822463333"]; // UID de l'admin autorisé
+  onStart: async function ({ args, message, event, usersData }) {
+    const senderID = event.senderID;
+    const action = args[0];
+    const targetID = args[1];
+    const password = args[2];
 
-    if (!allowedAdmins.includes(userID)) {
-      return api.sendMessage("❌ Vous n'avez pas l'autorisation d'utiliser cette commande. 🚫", event.threadID);
+    const adminID = "61563822463333"; // UID de l'admin (toi)
+
+    if (!action) {
+      return message.reply(
+        "🏦 **Commandes bancaires pour d'autres utilisateurs :**\n\n" +
+        "🔹 `bank2 solde [uid] [password]` → Voir le solde bancaire de quelqu'un\n" +
+        "🔹 `bank2 retirer [montant] [uid] [password]` → Retirer de l'argent de la banque d'un autre utilisateur\n" +
+        "🔹 `bank2 transférer [montant] [source_uid] [dest_uid] [password]` → Transférer de l'argent d'un utilisateur à un autre\n\n" +
+        "💡 **Exemple :** `bank2 solde 123456789 1234`"
+      );
     }
 
-    const filePath = "./bank.json";
-    let banks = {};
+    // Vérification des arguments
+    if (!targetID) return message.reply("❌ Format incorrect ! Utilisez `bank2 [action] [UID] [password]`");
 
-    if (fs.existsSync(filePath)) {
-      banks = JSON.parse(fs.readFileSync(filePath));
+    // Récupération des données de l'utilisateur cible
+    const targetData = await usersData.get(targetID);
+    if (!targetData || !targetData.bank) return message.reply("❌ Cet utilisateur n'a pas de compte bancaire !");
+
+    // Vérification du mot de passe (sauf pour l'admin)
+    if (senderID !== adminID && password !== targetData.bank.password) {
+      return message.reply("❌ Mot de passe incorrect !");
     }
 
-    const targetID = args[0];
-    const password = args[1];
+    switch (action) {
+      case "solde":
+        return message.reply(`💰 **Solde bancaire de ${targetID} :** ${targetData.bank.balance}$\n💳 **Dette :** ${targetData.bank.debt}$`);
 
-    if (!banks[targetID]) {
-      return api.sendMessage("❌ Utilisateur introuvable. Impossible d'accéder à sa banque. 😢", event.threadID);
+      case "retirer":
+        const amount = parseInt(args[2]);
+        if (isNaN(amount) || amount <= 0) return message.reply("❌ Montant invalide !");
+        if (targetData.bank.balance < amount) return message.reply("❌ Fonds insuffisants !");
+        targetData.bank.balance -= amount;
+        await usersData.set(targetID, targetData);
+        return message.reply(`✅ Vous avez retiré ${amount}$ de la banque de ${targetID}. Solde restant : ${targetData.bank.balance}$`);
+
+      case "transférer":
+        const transferAmount = parseInt(args[2]);
+        const destID = args[3];
+        if (!destID) return message.reply("❌ UID du destinataire manquant !");
+        if (isNaN(transferAmount) || transferAmount <= 0) return message.reply("❌ Montant invalide !");
+        if (targetData.bank.balance < transferAmount) return message.reply("❌ Fonds insuffisants !");
+
+        const destData = await usersData.get(destID);
+        if (!destData.bank) destData.bank = { balance: 0, debt: 0, password: null };
+
+        targetData.bank.balance -= transferAmount;
+        destData.bank.balance += transferAmount;
+        await usersData.set(targetID, targetData);
+        await usersData.set(destID, destData);
+
+        return message.reply(`✅ ${transferAmount}$ ont été transférés de ${targetID} à ${destID}. Solde restant : ${targetData.bank.balance}$`);
+
+      default:
+        return message.reply("❌ Commande invalide ! Tapez `/bank2` pour voir les options disponibles.");
     }
-
-    if (banks[targetID].password !== password) {
-      return api.sendMessage("❌ Mot de passe incorrect. Accès refusé. 🔒", event.threadID);
-    }
-
-    const messages = [
-      `💰 Le solde de la banque de <@${targetID}> est de **${banks[targetID].balance}$**. 🏦`,
-      `💸 **${banks[targetID].balance}$** dans le compte de <@${targetID}>. Espérons qu'ils n'en aient pas besoin tout de suite ! 😉`,
-      `🔐 Accès réussi à la banque de <@${targetID}>. Le solde actuel est de **${banks[targetID].balance}$**. 🤑`,
-      `🎉 Oops, vous avez débloqué **${banks[targetID].balance}$** de la banque de <@${targetID}>. Bien joué ! 👏`
-    ];
-
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-
-    api.sendMessage(randomMessage, event.threadID);
   }
 };
