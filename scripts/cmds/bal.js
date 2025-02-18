@@ -1,31 +1,31 @@
 const fs = require("fs");
+const balanceFile = "balance.json";
 
 module.exports = {
   config: {
     name: "bal",
     version: "1.0",
     author: "L'Uchiha Perdu",
-    countDown: 3,
     role: 0,
-    shortDescription: { en: "Affiche le solde d'argent liquide" },
-    description: { en: "Affiche le montant d'argent liquide d'un utilisateur" },
-    category: "💰 Banque",
-    guide: { en: "/bal" }
+    shortDescription: "Voir son solde",
+    longDescription: "Affiche l'argent en main de l'utilisateur.",
+    category: "économie",
+    guide: "{p}bal"
   },
 
-  onStart: async function ({ api, event }) {
+  onStart: async function ({ message, event }) {
     const userID = event.senderID;
-    const filePath = "./balance.json";
-    let users = {};
+    let bankData = {};
 
-    if (fs.existsSync(filePath)) {
-      users = JSON.parse(fs.readFileSync(filePath));
+    if (fs.existsSync(balanceFile)) {
+      bankData = JSON.parse(fs.readFileSync(balanceFile));
     }
 
-    if (!users[userID]) {
-      users[userID] = { balance: 0 };
+    if (!bankData[userID]) {
+      bankData[userID] = { cash: 0, bank: 0 };
+      fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
     }
 
-    api.sendMessage(`💵 Votre solde liquide est de **${users[userID].balance}$**.`, event.threadID);
+    message.reply(`💰 **Solde actuel :**\n👜 En main : ${bankData[userID].cash} 💸\n🏦 En banque : ${bankData[userID].bank} 🏦`);
   }
 };
