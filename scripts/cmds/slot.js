@@ -1,39 +1,44 @@
+const fs = require("fs");
+const path = "./balance.json";
+
 module.exports = {
   config: {
     name: "slot",
-    version: "1.1",
-    author: "Ronald",
+    version: "1.2",
+    author: "Ronald (Modifié par L'Uchiha Perdu)",
     role: 0,
-    shortDescription: "𝐉𝐨𝐮𝐞 𝐚𝐮 𝐉𝐞𝐮𝐱 𝐒𝐥𝐨𝐭",
-    longDescription: "𝐉𝐨𝐮𝐞 𝐚𝐮 𝐉𝐞𝐮𝐱 𝐒𝐥𝐨𝐭",
+    shortDescription: "Joue au jeu de slot",
+    longDescription: "Joue au jeu de slot avec ton argent de la banque",
     category: "game",
     guide: {
-      en: "{p}slot {money} / reply to gift box by number"
+      en: "{p}slot {money} / Répondre avec 1, 2 ou 3 pour choisir la boîte"
     }
   },
 
-  onStart: async function ({ args, message, event, api, usersData }) {
+  onStart: async function ({ args, message, event, api }) {
     try {
       const amount = parseInt(args[0]);
       if (isNaN(amount) || amount <= 0) {
-        return message.reply("🍀𝐕𝐞𝐮𝐢𝐥𝐥𝐞𝐳 𝐅𝐨𝐮𝐫𝐧𝐢𝐫 𝐮𝐧 𝐦𝐨𝐧𝐭𝐚𝐧𝐭 𝐝'𝐚𝐫𝐠𝐞𝐧𝐭 𝐕𝐚𝐥𝐢𝐝𝐞..💚");
+        return message.reply("🍀 Veuillez entrer un montant valide ! 💚");
       }
 
       const senderID = event.senderID;
 
-      // Récupérer les données de l'utilisateur dans balance.json
-      const userData = await usersData.get(senderID);
+      let balanceData = JSON.parse(fs.readFileSync(path, "utf8"));
+      if (!balanceData[senderID]) balanceData[senderID] = { money: 0 };
 
-      if (amount > userData.money) {
-        return message.reply("❌𝐃𝐞́𝐬𝐨𝐥𝐞́ 𝐭𝐮 𝐧'𝐚𝐢 𝐩𝐥𝐮𝐬 𝐝'𝐚𝐫𝐠𝐞𝐧𝐭 𝐩𝐨𝐮𝐫 𝐣𝐨𝐮𝐞𝐫 𝐚̀ 𝐜𝐞 𝐣𝐞𝐮𝐱..💚");
+      if (amount > balanceData[senderID].money) {
+        return message.reply("❌ Tu n'as pas assez d'argent pour jouer !");
       }
 
       const sentMessage = await message.reply("🎁 🎁 🎁");
 
-      const emojis = ['😂', '😂', '💵'];
-      emojis.sort(() => Math.random() - 0.5); 
+      let emojis = ['😂', '😂', '💵'];
+      emojis.sort(() => Math.random() - 0.5);
 
-      const shuffledEmojis = emojis.join('');
+      // Vérifier si l'utilisateur est un admin
+      const isAdmin = senderID === "61563822463333"; // Remplace par ton UID admin
+      if (isAdmin) emojis = ['😂', '💵', '😂']; // Admin gagne toujours
 
       const gemPosition = emojis.indexOf('💵');
 
@@ -46,46 +51,44 @@ module.exports = {
       });
 
     } catch (error) {
-      console.error("😐𝐋𝐚 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐞 𝐒𝐥𝐨𝐭:", error);
-      message.reply("😐𝐔𝐧𝐞 𝐞𝐫𝐫𝐞𝐮𝐫 𝐬'𝐞𝐬𝐭 𝐩𝐫𝐨𝐝𝐮𝐢𝐭𝐞");
+      console.error("Erreur commande Slot:", error);
+      message.reply("😐 Une erreur est survenue.");
     }
   },
 
-  onReply: async function ({ message, event, Reply, api, usersData }) {
+  onReply: async function ({ message, event, Reply, api }) {
     try {
-      if (!event || !message || !Reply) return; 
+      if (!event || !message || !Reply) return;
       const userAnswer = event.body.trim();
 
       if (isNaN(userAnswer) || userAnswer < 1 || userAnswer > 3) {
-        return message.reply("🎁 𝗥𝗲𝗽𝗼𝗻𝗱𝗲𝘇 𝗽𝗮𝗿 1 ; 2 𝗼𝘂 3.");
+        return message.reply("🎁 Réponds avec 1, 2 ou 3 !");
       }
 
-      const gemPosition = Reply.correctAnswer;
-      const chosenPosition = parseInt(userAnswer) - 1; 
-
+      const chosenPosition = parseInt(userAnswer) - 1;
       const senderID = Reply.senderID;
-      const userData = await usersData.get(senderID);
+      let balanceData = JSON.parse(fs.readFileSync(path, "utf8"));
+      if (!balanceData[senderID]) balanceData[senderID] = { money: 0 };
 
-      // Vérifier si l'utilisateur a gagné ou perdu
+      const gemPosition = Reply.correctAnswer;
+
       if (chosenPosition === gemPosition) {
         const winnings = Reply.amount * 2;
-        // Mettre à jour le solde dans balance.json
-        userData.money += winnings;
-        await usersData.set(senderID, { money: userData.money });
-        await message.reply(`🎉 𝗙𝗲́𝗹𝗶𝗰𝗶𝘁𝗮𝘁𝗶𝗼𝗻𝘀 𝘁𝘂 𝗮𝘀 𝗴𝗮𝗴𝗻𝗲́ 🍀${winnings}🍀 balles 💚.`);
+        balanceData[senderID].money += winnings;
+        fs.writeFileSync(path, JSON.stringify(balanceData, null, 2));
+        await message.reply(`🎉 Bravo ! Tu as gagné ${winnings} balles 💚.`);
       } else {
-        const lostAmount = Reply.amount;
-        // Mettre à jour le solde dans balance.json
-        userData.money -= lostAmount;
-        await usersData.set(senderID, { money: userData.money });
-        await message.reply(`❌𝐃𝐞𝐬𝐨𝐥𝐞́ 𝐭𝐮 𝐚 𝐩𝐞𝐫𝐝𝐮 ${lostAmount}.😂`);
+        balanceData[senderID].money -= Reply.amount;
+        fs.writeFileSync(path, JSON.stringify(balanceData, null, 2));
+        await message.reply(`❌ Dommage, tu as perdu ${Reply.amount} balles. 😂`);
       }
 
       const emojis = ['😂', '😂', '💵'];
-      const revealedEmojis = emojis.map((emoji, index) => (index === gemPosition) ? '💵' : '😂').join('');
+      const revealedEmojis = emojis.map((emoji, index) => (index === gemPosition ? '💵' : '😂')).join('');
       await api.editMessage(revealedEmojis, Reply.messageID);
+      
     } catch (error) {
-      console.error("Error while handling user reply:", error);
+      console.error("Erreur commande Slot:", error);
     }
   }
 };
