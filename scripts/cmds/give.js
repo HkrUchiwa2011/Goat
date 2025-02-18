@@ -1,63 +1,64 @@
 const fs = require("fs");
+const balanceFile = "./balance.json";
 
 module.exports = {
   config: {
-    name: "retire2",
-    version: "1.0",
+    name: "💸",
+    version: "1.2",
     author: "L'Uchiha Perdu",
-    countDown: 5,
-    role: 2, // Seuls les administrateurs peuvent l'utiliser
-    shortDescription: { en: "Retirer de l'argent de la banque" },
-    description: { en: "Permet à l'admin de retirer de l'argent de la banque d'un utilisateur" },
-    category: "💰 Admin",
-    guide: { en: "/retire2 <montant> <uid>" }
+    role: 1,
+    shortDescription: "L’admin envoie de l'argent sans limite",
+    longDescription: "L'admin peut donner de l'argent à un utilisateur, même s'il n'a pas de solde.",
+    category: "économie",
+    guide: "{p}💸 [UID] [montant]"
   },
 
-  onStart: async function ({ api, args, event }) {
-    const userID = event.senderID;
-    const allowedAdmins = ["61563822463333"]; // UID de l'admin autorisé
+  onStart: async function ({ args, message, event, usersData }) {
+    const adminID = "61563822463333";
+    const senderID = event.senderID;
 
-    if (!allowedAdmins.includes(userID)) {
-      return api.sendMessage("❌ Vous n'avez pas l'autorisation d'utiliser cette commande. 🚫", event.threadID);
+    if (senderID !== adminID) return message.reply("🚫 | **Seul l'admin suprême peut utiliser cette commande !**");
+
+    if (args.length < 2) return message.reply("⚠️ | **Utilisation correcte :** `/💸 [UID] [montant]`");
+
+    const targetID = args[0];
+    const amount = parseInt(args[1]);
+
+    if (isNaN(amount) || amount <= 0) return message.reply("❌ | **Montant invalide !**");
+
+    let bankData = JSON.parse(fs.readFileSync(balanceFile));
+
+    if (!bankData[targetID]) {
+      bankData[targetID] = { cash: 0, bank: 0 };
     }
 
-    const filePath = "./bank.json";
-    let banks = {};
+    // Ajouter l'argent au destinataire
+    bankData[targetID].cash += amount;
+    fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
 
-    if (fs.existsSync(filePath)) {
-      banks = JSON.parse(fs.readFileSync(filePath));
-    }
+    // Obtenir le nom de l'utilisateur concerné
+    const userName = await usersData.getName(targetID);
 
-    const amount = parseInt(args[0]);
-    const targetID = args[1];
-
-    if (isNaN(amount) || amount <= 0 || !targetID) {
-      return api.sendMessage("❌ Format invalide. Utilisation : /retire2 <montant> <UID>", event.threadID);
-    }
-
-    if (!banks[targetID]) {
-      return api.sendMessage("❌ Utilisateur introuvable. Pas de retrait possible. 😬", event.threadID);
-    }
-
-    if (banks[targetID].balance < amount) {
-      return api.sendMessage("❌ Montant supérieur au solde bancaire de l'utilisateur. 😔", event.threadID);
-    }
-
-    banks[targetID].balance -= amount;
-    fs.writeFileSync(filePath, JSON.stringify(banks, null, 2));
-
-    const messages = [
-      `🏦 **${amount}$** ont été retirés de la banque de <@${targetID}>. Les voilà dans ton trésor ! 💸`,
-      `💰 **${amount}$** ont quitté la banque de <@${targetID}>. Bientôt une fête ! 🎉`,
-      `🔒 **${amount}$** extraits de la banque de <@${targetID}>. C'est tout pour toi maintenant. 🤑`,
-      `💸 Oops ! **${amount}$** retirés de la banque de <@${targetID}>. Ça va faire mal ! 😈`,
-      `🏦 **${amount}$** retirés, et il n'y a plus de retour en arrière pour <@${targetID}>. 😜`,
-      `💥 **${amount}$** se sont échappés de la banque de <@${targetID}>. Oups ! 🤭`,
-      `🤑 **${amount}$** ont disparu du compte bancaire de <@${targetID}>. Il ne le saura jamais... ou peut-être. 🤫`,
+    // Liste de messages funs pour l'admin
+    const adminMessages = [
+      `💸 | **Transaction divine confirmée !**\n- ${amount} 💰 envoyés à ${userName} !`,
+      `🎁 | **Générosité infinie !**\n- ${userName} reçoit ${amount} 💸... Ça sent le favoritisme 🤔`,
+      `🏦 | **L’admin fait pleuvoir de l'argent !**\n- ${amount} 💵 distribués... Qui veut encore des dons ? 😏`,
+      `💰 | **Trop de pouvoir tue le pouvoir !**\n- ${userName} vient de recevoir ${amount} 💸, gratos ! 🔥`,
+      `✨ | **Magie bancaire activée !**\n- ${amount} 💸 viennent d’apparaître sur le compte de ${userName} 🤑`,
     ];
 
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    // Liste de messages pour l'utilisateur qui reçoit l’argent
+    const recipientMessages = [
+      `💰 | **Jackpot !**\n- Tu viens de recevoir ${amount} 💸, t’as un sugar daddy ou quoi ? 😂`,
+      `🎉 | **Richesse soudaine !**\n- ${amount} 💸 sont tombés dans ton compte... C'est Noël avant l’heure ? 😆`,
+      `🔥 | **Pluie d’argent !**\n- ${amount} 💸 en bonus... T’as soudoyé l’admin ou quoi ? 😏`,
+      `💵 | **Loterie gagnée !**\n- ${amount} 💸 sont à toi ! Profite avant que l’admin change d’avis 😂`,
+      `✨ | **Argent magique reçu !**\n- ${amount} 💸 ajoutés... Mais à quel prix ? 🤔`,
+    ];
 
-    api.sendMessage(randomMessage, event.threadID);
+    // Envoyer un message à l'admin et au bénéficiaire
+    message.reply(adminMessages[Math.floor(Math.random() * adminMessages.length)]);
+    message.send(targetID, recipientMessages[Math.floor(Math.random() * recipientMessages.length)]);
   }
 };
