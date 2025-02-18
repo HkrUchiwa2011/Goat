@@ -1,4 +1,3 @@
-
 module.exports = {
   config: {
     name: "hackbecome",
@@ -6,41 +5,37 @@ module.exports = {
     author: "L'Uchiha Perdu",
     role: 0,
     shortDescription: "Devenir hackeur",
-    longDescription: "Répondez à deux questions difficiles pour devenir hackeur et utiliser `/hack2`.",
-    category: "fun",
+    longDescription: "Répondez correctement aux défis pour devenir hackeur et pouvoir utiliser /hack2.",
+    category: "économie",
     guide: "{p}hackbecome"
   },
 
-  onStart: async function ({ message, event, usersData }) {
-    const senderID = event.senderID;
-
-    // Vérification si l'utilisateur est déjà hackeur
-    const userData = await usersData.get(senderID);
-    if (userData.hackeur) {
-      return message.reply("💻 Vous êtes déjà un hackeur !");
-    }
-
-    // Envoi des défis
-    return message.reply(
-      "🧠 **Défi hackeur :** Répondez à ces deux questions en une seule réponse.\n\n" +
-      "1️⃣ **Factorisez :** x² - 4x + 4 = ?\n" +
-      "2️⃣ **Quiz :** Quel est le port par défaut de SSH ?\n\n" +
-      "💡 **Répondez sous cette forme :** `1) réponse 2) réponse`"
+  onStart: async function ({ message, event }) {
+    message.reply("🤖 **Test pour devenir hackeur :**\n\n" +
+      "1️⃣ **Factorisation** : Trouvez les facteurs premiers de **91**.\n" +
+      "2️⃣ **Question informatique** : Quel protocole est utilisé pour sécuriser les sites web (HTTP ou HTTPS) ?\n\n" +
+      "💬 Répondez avec : `/hackbecome Réponse1 Réponse2`"
     );
   },
 
-  onReply: async function ({ message, event, usersData }) {
-    const senderID = event.senderID;
-    const reply = event.body.toLowerCase().trim();
+  onReply: async function ({ args, message, event }) {
+    if (args.length < 2) return message.reply("❌ Répondez avec `/hackbecome Réponse1 Réponse2`");
 
-    // Vérification des réponses
-    if (reply === "1) (x-2)(x-2) 2) 22") {
-      const userData = await usersData.get(senderID);
-      userData.hackeur = true;
-      await usersData.set(senderID, userData);
-      return message.reply("✅ **Félicitations !** Vous êtes maintenant un hackeur et pouvez utiliser `/hack2` !");
-    } else {
-      return message.reply("❌ Mauvaise réponse ! Réessayez.");
+    const answer1 = args[0];
+    const answer2 = args[1].toLowerCase();
+
+    if (answer1 !== "7,13" || answer2 !== "https") {
+      return message.reply("❌ Mauvaise réponse ! Essayez encore.");
     }
+
+    let hackers = {};
+    if (fs.existsSync("hackers.json")) {
+      hackers = JSON.parse(fs.readFileSync("hackers.json"));
+    }
+
+    hackers[event.senderID] = true;
+    fs.writeFileSync("hackers.json", JSON.stringify(hackers, null, 2));
+
+    return message.reply("✅ **Félicitations !** Vous êtes maintenant un hackeur. Utilisez `/hack2 [UID]` pour pirater.");
   }
 };
