@@ -1,63 +1,34 @@
-const fs = require("fs");
-
 module.exports = {
   config: {
     name: "retire",
     version: "1.0",
     author: "L'Uchiha Perdu",
-    countDown: 5,
-    role: 2, // Seuls les administrateurs peuvent l'utiliser
-    shortDescription: { en: "Retirer de l'argent d'un utilisateur" },
-    description: { en: "Permet à l'admin de retirer de l'argent d'un utilisateur" },
-    category: "💰 Admin",
-    guide: { en: "/retire <montant> <uid>" }
+    role: 1,
+    shortDescription: "Retirer de l'argent du solde d'un utilisateur",
+    longDescription: "L'admin peut retirer de l'argent du solde en main d'un utilisateur.",
+    category: "économie",
+    guide: "{p}retire [UID] [montant]"
   },
 
-  onStart: async function ({ api, args, event }) {
-    const userID = event.senderID;
-    const allowedAdmins = ["61563822463333"]; // UID de l'admin autorisé
+  onStart: async function ({ args, message, event }) {
+    const adminID = "61563822463333";
+    const senderID = event.senderID;
 
-    if (!allowedAdmins.includes(userID)) {
-      return api.sendMessage("❌ Vous n'avez pas l'autorisation d'utiliser cette commande. 🚫", event.threadID);
-    }
+    if (senderID !== adminID) return message.reply("❌ Seul l'admin peut utiliser cette commande !");
 
-    const filePath = "./balance.json";
-    let users = {};
+    if (args.length < 2) return message.reply("⚠️ Utilisation : `/retire [UID] [montant]`");
 
-    if (fs.existsSync(filePath)) {
-      users = JSON.parse(fs.readFileSync(filePath));
-    }
+    const targetID = args[0];
+    const amount = parseInt(args[1]);
 
-    const amount = parseInt(args[0]);
-    const targetID = args[1];
+    let bankData = JSON.parse(fs.readFileSync(balanceFile));
 
-    if (isNaN(amount) || amount <= 0 || !targetID) {
-      return api.sendMessage("❌ Format invalide. Utilisation : /retire <montant> <UID>", event.threadID);
-    }
+    if (!bankData[targetID]) return message.reply("❌ Cet utilisateur n'existe pas !");
+    if (bankData[targetID].cash < amount) return message.reply("❌ Fonds insuffisants !");
 
-    if (!users[targetID]) {
-      return api.sendMessage("❌ Utilisateur introuvable. Pas de retrait possible. 😬", event.threadID);
-    }
+    bankData[targetID].cash -= amount;
+    fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
 
-    if (users[targetID].balance < amount) {
-      return api.sendMessage("❌ Montant supérieur au solde de l'utilisateur. Il ne peut pas être retiré. 💸", event.threadID);
-    }
-
-    users[targetID].balance -= amount;
-    fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
-
-    const messages = [
-      `🔥 **${amount}$** ont été retirés du compte de <@${targetID}>. Que vas-tu faire avec ça ? 😏`,
-      `💥 **${amount}$** retirés avec succès de <@${targetID}>. Attention, c'est toi qui est visé maintenant ! 👀`,
-      `💸 Les **${amount}$** sont partis. Espérons que <@${targetID}> n'a pas trop pleuré. 😢`,
-      `😎 **${amount}$** en moins dans le compte de <@${targetID}>. Une action épique ! 🔥`,
-      `💔 **${amount}$** retirés de <@${targetID}>. Ça fait mal mais c'était nécessaire, non ? 😅`,
-      `💰 **${amount}$** ont quitté le compte de <@${targetID}>. Il ne les reverra jamais... ou peut-être. 😏`,
-      `📉 Boom ! **${amount}$** sont partis ! <@${targetID}> devra se serrer la ceinture ! 😜`,
-    ];
-
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-
-    api.sendMessage(randomMessage, event.threadID);
+    message.reply(`💵 **Retrait effectué !**\n- ${amount} 💸 retirés du solde de ${targetID}`);
   }
 };
