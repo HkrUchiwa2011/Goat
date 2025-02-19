@@ -1,38 +1,33 @@
-const cooldowns = {};
-
 module.exports = {
-  config: {
-    name: "daily",
-    version: "1.1",
-    author: "L'Uchiha Perdu",
-    role: 0,
-    shortDescription: "Réclamer un bonus quotidien",
-    longDescription: "Permet aux utilisateurs de réclamer un bonus d'argent et d'expérience une fois par jour.",
-    category: "économie",
-    guide: "{p}daily"
-  },
+    config: {
+        name: "daily",
+        version: "1.0",
+        author: "L'Uchiha Perdu",
+        role: 0,
+        shortDescription: "Récompense quotidienne",
+        longDescription: "Permet de récupérer un bonus chaque jour.",
+        category: "économie",
+        guide: "{p}daily"
+    },
 
-  onStart: async function ({ message, event }) {
-    const userID = event.senderID;
-    const dailyAmount = Math.floor(Math.random() * 500) + 500; // Bonus entre 500 et 1000 💸
-    const xpGain = Math.floor(Math.random() * 50) + 50; // XP entre 50 et 100 🆙
-    const cooldownTime = 24 * 60 * 60 * 1000; // 24h
+    onStart: async function ({ message, event }) {
+        const userID = event.senderID;
+        const dailyAmount = Math.floor(Math.random() * 5000) + 1000; // Entre 1000 et 5000 crédits
+        const cooldown = 24 * 60 * 60 * 1000; // 24h en millisecondes
+        let bankData = JSON.parse(fs.readFileSync(balanceFile));
 
-    let bankData = JSON.parse(fs.readFileSync("balance.json"));
+        if (!bankData[userID]) bankData[userID] = { cash: 0, bank: 0, debt: 0, secured: false, lastDaily: 0 };
 
-    if (!bankData[userID]) {
-      bankData[userID] = { cash: 0, bank: 0, xp: 0 };
+        const lastClaim = bankData[userID].lastDaily || 0;
+        if (Date.now() - lastClaim < cooldown) {
+            const timeLeft = Math.ceil((cooldown - (Date.now() - lastClaim)) / (60 * 60 * 1000));
+            return message.reply(`⏳ Tu as déjà pris ton daily ! Reviens dans **${timeLeft} heures**.`);
+        }
+
+        bankData[userID].cash += dailyAmount;
+        bankData[userID].lastDaily = Date.now();
+        fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
+
+        message.reply(`🎉 **Bravo !** Tu as reçu **${dailyAmount} crédits** en récompense quotidienne !`);
     }
-
-    if (cooldowns[userID] && Date.now() - cooldowns[userID] < cooldownTime) {
-      return message.reply("🕒 Vous avez déjà réclamé votre bonus aujourd'hui ! Revenez demain.");
-    }
-
-    bankData[userID].cash += dailyAmount;
-    bankData[userID].xp += xpGain;
-    cooldowns[userID] = Date.now();
-    fs.writeFileSync("balance.json", JSON.stringify(bankData, null, 2));
-
-    message.reply(`🎁 **Bonus quotidien reçu !**\n- 💸 Argent : ${dailyAmount}\n- 🆙 Expérience : ${xpGain}`);
-  }
 };
