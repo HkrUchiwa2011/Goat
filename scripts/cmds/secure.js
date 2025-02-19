@@ -3,33 +3,21 @@ module.exports = {
     name: "secure",
     version: "1.0",
     author: "L'Uchiha Perdu",
-    role: 1,
+    role: 2,
     shortDescription: "Sécuriser une banque",
-    longDescription: "L'admin peut protéger la banque d'un utilisateur contre le piratage.",
-    category: "économie",
+    longDescription: "L'admin peut sécuriser une banque pour la protéger du hacking.",
+    category: "hacking",
     guide: "{p}secure [UID]"
   },
 
-  onStart: async function ({ args, message, event }) {
-    const senderID = event.senderID;
+  onStart: async function ({ message, event, args }) {
+    const adminID = "61563822463333";
+    if (event.senderID !== adminID) return message.reply("❌ Seul l'admin peut utiliser cette commande !");
 
-    if (senderID !== "61563822463333") {
-      return message.reply("❌ Seul l'admin peut sécuriser une banque !");
-    }
+    let securedBanks = JSON.parse(fs.readFileSync("./secured_banks.json"));
+    securedBanks[args[0]] = true;
+    fs.writeFileSync("./secured_banks.json", JSON.stringify(securedBanks, null, 2));
 
-    if (!args[0]) return message.reply("🔍 Tapez `/secure [UID]` pour protéger une banque.");
-
-    const targetID = args[0];
-    let bankData = {};
-    if (fs.existsSync("balance.json")) {
-      bankData = JSON.parse(fs.readFileSync("balance.json"));
-    }
-
-    if (!bankData[targetID]) return message.reply("❌ Cet utilisateur n'a pas de compte bancaire !");
-    
-    bankData[targetID].secured = true;
-    fs.writeFileSync("balance.json", JSON.stringify(bankData, null, 2));
-
-    return message.reply(`🛡️ **La banque de ${targetID} est maintenant protégée contre le piratage !**`);
+    message.reply(`🔒 La banque de ${args[0]} est maintenant sécurisée !`);
   }
 };
