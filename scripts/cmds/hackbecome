@@ -1,3 +1,17 @@
+const fs = require("fs");
+const path = "./hackers.json";
+
+// Fonction pour lire le fichier des hackeurs
+function getHackers() {
+  if (!fs.existsSync(path)) return {};
+  return JSON.parse(fs.readFileSync(path));
+}
+
+// Fonction pour sauvegarder les hackeurs
+function saveHackers(data) {
+  fs.writeFileSync(path, JSON.stringify(data, null, 2));
+}
+
 module.exports = {
   config: {
     name: "hackbecome",
@@ -5,37 +19,44 @@ module.exports = {
     author: "L'Uchiha Perdu",
     role: 0,
     shortDescription: "Devenir hackeur",
-    longDescription: "Répondez correctement aux défis pour devenir hackeur et pouvoir utiliser /hack2.",
-    category: "économie",
-    guide: "{p}hackbecome"
+    longDescription: "Répondez correctement aux 3 questions pour devenir hackeur.",
+    category: "hacking"
   },
 
-  onStart: async function ({ message, event }) {
-    message.reply("🤖 **Test pour devenir hackeur :**\n\n" +
-      "1️⃣ **Factorisation** : Trouvez les facteurs premiers de **91**.\n" +
-      "2️⃣ **Question informatique** : Quel protocole est utilisé pour sécuriser les sites web (HTTP ou HTTPS) ?\n\n" +
-      "💬 Répondez avec : `/hackbecome Réponse1 Réponse2`"
-    );
-  },
+  onStart: async function ({ message, event, args }) {
+    const senderID = event.senderID;
+    let hackers = getHackers();
 
-  onReply: async function ({ args, message, event }) {
-    if (args.length < 2) return message.reply("❌ Répondez avec `/hackbecome Réponse1 Réponse2`");
+    if (hackers[senderID]) return message.reply("😎 Vous êtes déjà hackeur !");
 
-    const answer1 = args[0];
-    const answer2 = args[1].toLowerCase();
+    // Liste des questions et réponses
+    const questions = [
+      { question: "Combien font 987 x 123 ?", answer: "121401" },
+      { question: "Quel est le système d'exploitation basé sur Linux ?", answer: "Ubuntu" },
+      { question: "Qui est le créateur de l'univers ?", answer: "L'Uchiha Perdu" }
+    ];
 
-    if (answer1 !== "7,13" || answer2 !== "https") {
-      return message.reply("❌ Mauvaise réponse ! Essayez encore.");
+    // Si aucune réponse n'est fournie
+    if (!args[0]) {
+      return message.reply(`🕵️ Répondez aux 3 questions pour devenir hackeur.\n\n${questions[0].question}\n\nRépondez avec : /hackbecome [réponse]`);
     }
 
-    let hackers = {};
-    if (fs.existsSync("hackers.json")) {
-      hackers = JSON.parse(fs.readFileSync("hackers.json"));
+    // Vérifier la réponse
+    let progress = hackers[senderID] ? hackers[senderID].progress : 0;
+    if (args.join(" ").toLowerCase() === questions[progress].answer.toLowerCase()) {
+      progress++;
+      hackers[senderID] = { progress };
+      saveHackers(hackers);
+
+      if (progress === questions.length) {
+        message.reply("🎉 Parfait ! Vous êtes maintenant un hackeur officiel !");
+        hackers[senderID] = { progress: "hackeur" };
+        saveHackers(hackers);
+      } else {
+        message.reply(`✅ Correct ! Prochaine question :\n\n${questions[progress].question}\n\nRépondez avec : /hackbecome [réponse]`);
+      }
+    } else {
+      message.reply("❌ Mauvaise réponse ! Essayez encore.");
     }
-
-    hackers[event.senderID] = true;
-    fs.writeFileSync("hackers.json", JSON.stringify(hackers, null, 2));
-
-    return message.reply("✅ **Félicitations !** Vous êtes maintenant un hackeur. Utilisez `/hack2 [UID]` pour pirater.");
   }
 };
