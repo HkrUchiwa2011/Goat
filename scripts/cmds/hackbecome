@@ -1,62 +1,50 @@
 const fs = require("fs");
-const path = "./hackers.json";
+const balanceFile = "balance.json";
 
-// Fonction pour lire le fichier des hackeurs
-function getHackers() {
-  if (!fs.existsSync(path)) return {};
-  return JSON.parse(fs.readFileSync(path));
-}
-
-// Fonction pour sauvegarder les hackeurs
-function saveHackers(data) {
-  fs.writeFileSync(path, JSON.stringify(data, null, 2));
-}
+const questions = [
+    { question: "Combien font 12 x 8 ?", answer: "96" },
+    { question: "Quel est le langage utilisé pour coder un bot Node.js ?", answer: "javascript" },
+    { question: "Qui est le créateur de l'univers ?", answer: "L'Uchiha Perdu" }
+];
 
 module.exports = {
-  config: {
-    name: "hackbecome",
-    version: "1.0",
-    author: "L'Uchiha Perdu",
-    role: 0,
-    shortDescription: "Devenir hackeur",
-    longDescription: "Répondez correctement aux 3 questions pour devenir hackeur.",
-    category: "hacking"
-  },
+    config: {
+        name: "hackbecome",
+        version: "1.0",
+        author: "L'Uchiha Perdu",
+        role: 0,
+        shortDescription: "Devenir hackeur en répondant à trois questions",
+        longDescription: "Permet de passer un test pour devenir hackeur et utiliser la commande /hack2.",
+        category: "économie",
+        guide: "{p}hackbecome réponse"
+    },
 
-  onStart: async function ({ message, event, args }) {
-    const senderID = event.senderID;
-    let hackers = getHackers();
+    onStart: async function ({ args, message, event }) {
+        const userID = event.senderID;
+        let bankData = JSON.parse(fs.readFileSync(balanceFile));
 
-    if (hackers[senderID]) return message.reply("😎 Vous êtes déjà hackeur !");
+        if (!bankData[userID]) bankData[userID] = { cash: 0, bank: 0, debt: 0, secured: false, hacker: 0 };
 
-    // Liste des questions et réponses
-    const questions = [
-      { question: "Combien font 987 x 123 ?", answer: "121401" },
-      { question: "Quel est le système d'exploitation basé sur Linux ?", answer: "Ubuntu" },
-      { question: "Qui est le créateur de l'univers ?", answer: "L'Uchiha Perdu" }
-    ];
+        if (bankData[userID].hacker === 3) return message.reply("⚠️ **Vous êtes déjà hackeur !**");
 
-    // Si aucune réponse n'est fournie
-    if (!args[0]) {
-      return message.reply(`🕵️ Répondez aux 3 questions pour devenir hackeur.\n\n${questions[0].question}\n\nRépondez avec : /hackbecome [réponse]`);
+        if (args.length === 0) {
+            return message.reply(`🤖 **Répondez aux trois questions pour devenir hackeur !**\n\n💬 **Première question :**\n👉 ${questions[0].question}\n\n⚠️ Répondez sous cette forme :\n\`/hackbecome votre_réponse\``);
+        }
+
+        const userAnswer = args.join(" ").toLowerCase();
+        const currentQuestion = bankData[userID].hacker;
+
+        if (userAnswer !== questions[currentQuestion].answer.toLowerCase()) {
+            return message.reply("❌ Mauvaise réponse ! Réessayez.");
+        }
+
+        bankData[userID].hacker += 1;
+        fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
+
+        if (bankData[userID].hacker === 3) {
+            return message.reply("🎉 **Félicitations !** Vous êtes maintenant un hackeur. Utilisez `/hack2` pour tenter de pirater des banques !");
+        }
+
+        return message.reply(`✅ Bonne réponse !\n\n💬 **Question suivante :**\n👉 ${questions[bankData[userID].hacker].question}\n\n⚠️ Répondez sous cette forme :\n\`/hackbecome votre_réponse\``);
     }
-
-    // Vérifier la réponse
-    let progress = hackers[senderID] ? hackers[senderID].progress : 0;
-    if (args.join(" ").toLowerCase() === questions[progress].answer.toLowerCase()) {
-      progress++;
-      hackers[senderID] = { progress };
-      saveHackers(hackers);
-
-      if (progress === questions.length) {
-        message.reply("🎉 Parfait ! Vous êtes maintenant un hackeur officiel !");
-        hackers[senderID] = { progress: "hackeur" };
-        saveHackers(hackers);
-      } else {
-        message.reply(`✅ Correct ! Prochaine question :\n\n${questions[progress].question}\n\nRépondez avec : /hackbecome [réponse]`);
-      }
-    } else {
-      message.reply("❌ Mauvaise réponse ! Essayez encore.");
-    }
-  }
 };
