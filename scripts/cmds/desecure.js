@@ -1,23 +1,32 @@
 module.exports = {
-  config: {
-    name: "desecure",
-    version: "1.0",
-    author: "L'Uchiha Perdu",
-    role: 2,
-    shortDescription: "Désécuriser une banque",
-    longDescription: "L'admin peut rendre une banque vulnérable au hacking.",
-    category: "hacking",
-    guide: "{p}desecure [UID]"
-  },
+    config: {
+        name: "desecure",
+        version: "1.0",
+        author: "L'Uchiha Perdu",
+        role: 1,
+        shortDescription: "Retirer la sécurité d'une banque",
+        longDescription: "Permet de rendre une banque vulnérable aux hacks.",
+        category: "économie",
+        guide: "{p}desecure [UID]"
+    },
 
-  onStart: async function ({ message, event, args }) {
-    const adminID = "61563822463333";
-    if (event.senderID !== adminID) return message.reply("❌ Seul l'admin peut utiliser cette commande !");
+    onStart: async function ({ args, message, event }) {
+        const adminID = "61563822463333";
+        const senderID = event.senderID;
 
-    let securedBanks = JSON.parse(fs.readFileSync("./secured_banks.json"));
-    delete securedBanks[args[0]];
-    fs.writeFileSync("./secured_banks.json", JSON.stringify(securedBanks, null, 2));
+        if (senderID !== adminID) return message.reply("❌ Seul l'admin peut utiliser cette commande !");
 
-    message.reply(`⚠️ La banque de ${args[0]} est maintenant vulnérable !`);
-  }
+        if (!args[0]) return message.reply("⚠️ Utilisation : `/desecure [UID]`");
+
+        const targetID = args[0];
+        let bankData = JSON.parse(fs.readFileSync(balanceFile));
+
+        if (!bankData[targetID]) return message.reply("❌ Cet utilisateur n'existe pas !");
+        if (!bankData[targetID].secured) return message.reply("🔓 Cette banque est déjà vulnérable !");
+
+        bankData[targetID].secured = false;
+        fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
+
+        message.reply(`⚠️ **La banque de ${targetID} est maintenant vulnérable !**`);
+    }
 };
