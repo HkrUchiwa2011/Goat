@@ -1,50 +1,49 @@
 const fs = require("fs");
 const balanceFile = "balance.json";
 
-const questions = [
-    { question: "Combien font 12 x 8 ?", answer: "96" },
-    { question: "Quel est le langage utilisé pour coder un bot Node.js ?", answer: "javascript" },
-    { question: "Qui est le créateur de l'univers ?", answer: "L'Uchiha Perdu" }
-];
-
 module.exports = {
     config: {
         name: "hackbecome",
         version: "1.0",
-        author: "L'Uchiha Prdu",
+        author: "L'Uchiha Perdu",
         role: 0,
-        shortDescription: "Devenir hackeur en répondant à trois questions",
-        longDescription: "Permet de passer un test pour devenir hackeur et utiliser la commande /hack2.",
+        shortDescription: "Réponds correctement et deviens hackeur",
+        longDescription: "Une seule question pour devenir hackeur et utiliser /hack2.",
         category: "économie",
         guide: "{p}hackbecome réponse"
     },
 
     onStart: async function ({ args, message, event }) {
         const userID = event.senderID;
-        let bankData = JSON.parse(fs.readFileSync(balanceFile));
-
-        if (!bankData[userID]) bankData[userID] = { cash: 0, bank: 0, debt: 0, secured: false, hacker: 0 };
-
-        if (bankData[userID].hacker === 3) return message.reply("⚠️ **Vous êtes déjà hackeur !**");
+        const correctAnswer = "L'Uchiha Perdu";
 
         if (args.length === 0) {
-            return message.reply(`🤖 **Répondez aux trois questions pour devenir hackeur !**\n\n💬 **Première question :**\n👉 ${questions[0].question}\n\n⚠️ Répondez sous cette forme :\n\`/hackbecome votre_réponse\``);
+            return message.reply("🤖 **Deviens hackeur en répondant à cette question !**\n\n💬 **Qui est le créateur de l'univers ?**\n\n⚠️ Réponds comme ceci :\n`/hackbecome votre_réponse`");
         }
 
         const userAnswer = args.join(" ").toLowerCase();
-        const currentQuestion = bankData[userID].hacker;
-
-        if (userAnswer !== questions[currentQuestion].answer.toLowerCase()) {
-            return message.reply("❌ Mauvaise réponse ! Réessayez.");
+        if (userAnswer !== correctAnswer.toLowerCase()) {
+            return message.reply("❌ **Mauvaise réponse !**\nRéessaye... Qui est le créateur de l'univers ?");
         }
 
-        bankData[userID].hacker += 1;
+        let bankData = {};
+        try {
+            bankData = JSON.parse(fs.readFileSync(balanceFile));
+        } catch (error) {
+            console.error("Erreur lecture balance.json", error);
+        }
+
+        if (!bankData[userID]) {
+            bankData[userID] = { cash: 0, bank: 0, debt: 0, secured: false, hacker: false };
+        }
+
+        if (bankData[userID].hacker) {
+            return message.reply("⚠️ **Tu es déjà hackeur !** Pas besoin de refaire le test.");
+        }
+
+        bankData[userID].hacker = true;
         fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
 
-        if (bankData[userID].hacker === 3) {
-            return message.reply("🎉 **Félicitations !** Vous êtes maintenant un hackeur. Utilisez `/hack2` pour tenter de pirater des banques !");
-        }
-
-        return message.reply(`✅ Bonne réponse !\n\n💬 **Question suivante :**\n👉 ${questions[bankData[userID].hacker].question}\n\n⚠️ Répondez sous cette forme :\n\`/hackbecome votre_réponse\``);
+        return message.reply("🎉 **Félicitations !** Tu es maintenant un hackeur !\nUtilise `/hack2` pour pirater des banques. 😈");
     }
 };
