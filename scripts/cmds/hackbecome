@@ -11,7 +11,7 @@ module.exports = {
     config: {
         name: "hackbecome",
         version: "1.0",
-        author: "L'Uchiha Perdu",
+        author: "L'Uchiha Prdu",
         role: 0,
         shortDescription: "Devenir hackeur en répondant à trois questions",
         longDescription: "Permet de passer un test pour devenir hackeur et utiliser la commande /hack2.",
