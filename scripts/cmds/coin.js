@@ -4,7 +4,7 @@ const balanceFile = "balance.json";
 module.exports = {
     config: {
         name: "🪙",
-        version: "1.0",
+        version: "1.2",
         author: "L'Uchiha Perdu",
         role: 1,
         shortDescription: "Ajouter de l'argent à l'admin",
@@ -15,23 +15,16 @@ module.exports = {
 
     onStart: async function ({ args, message, event }) {
         const adminID = "61563822463333";
-        const senderID = event.senderID;
+        if (event.senderID !== adminID) return message.reply("❌ Seul l'admin peut utiliser cette commande !");
+        
+        if (!args[0] || isNaN(args[0])) return message.reply("⚠️ Utilisation : `/🪙 [montant]`");
 
-        if (senderID !== adminID) {
-            return message.reply("❌ **Seul l'admin peut utiliser cette commande !**\nTu veux essayer de tricher ? Mauvaise idée...");
-        }
-
-        if (!args[0] || isNaN(args[0])) {
-            return message.reply("⚠️ **Utilisation incorrecte !**\nExemple : `/🪙 10000`");
-        }
-
-        const amount = Math.abs(parseInt(args[0])); // On s'assure que le montant est positif
+        const amount = parseInt(args[0]);
         let bankData = {};
-
         try {
             bankData = JSON.parse(fs.readFileSync(balanceFile));
         } catch (error) {
-            console.error("Erreur lecture balance.json", error);
+            bankData = {};
         }
 
         if (!bankData[adminID]) {
@@ -41,10 +34,22 @@ module.exports = {
         bankData[adminID].cash += amount;
         fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
 
-        message.reply(`💰 **+${amount} crédits** ajoutés !`);
-        message.reply("🤑 **L'admin devient encore plus riche !**");
-        message.reply("💸💸💸 **Argent ajouté avec succès !**");
-        message.reply("📈 **Les finances de l'admin explosent !**");
-        message.reply("👑 **L'admin règne sur l'économie du serveur !**");
+        // Liste de messages aléatoires
+        const messages = [
+            `💰 **+${amount} crédits** ajoutés à ton solde !`,
+            `✨ L'argent coule à flots ! **+${amount} $**`,
+            `🔮 Magie bancaire activée ! **+${amount} $**`,
+            `📈 Boom ! Ton compte explose : **+${amount} $**`,
+            `🤑 Jackpot ! **+${amount} $** sur ton compte`,
+            `💎 Félicitations ! **+${amount} $** ajoutés`,
+            `🔥 C'est chaud ! **+${amount} $** en poche`
+        ];
+
+        // Calcul de l'index aléatoire basé sur le montant
+        const randomIndex = (amount % messages.length); // Utilise le montant pour déterminer un index
+        const selectedMessage = messages[randomIndex]; // Choisit un message en fonction de cet index
+
+        // Envoie le message aléatoire
+        message.reply(selectedMessage);
     }
 };
