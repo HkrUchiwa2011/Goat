@@ -8,8 +8,8 @@ module.exports = {
     author: "L'Uchiha Perdu",
     role: 0,
     shortDescription: "Voir son solde",
-    longDescription: "Affiche l'argent en main de l'utilisateur.",
-    category: "économie",
+    longDescription: "Affiche uniquement l'argent en main de l'utilisateur.",
+    category: "💰 Économie",
     guide: "{p}bal"
   },
 
@@ -26,6 +26,6 @@ module.exports = {
       fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
     }
 
-    message.reply(`💰 **Solde actuel :**\n👜 En main : ${bankData[userID].cash} 💸\n🏦 En banque : ${bankData[userID].bank} 🏦`);
+    message.reply(`💰 **Solde actuel :**\n👜 En main : ${bankData[userID].cash} 💸`);
   }
 };
