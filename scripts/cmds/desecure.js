@@ -1,32 +1,54 @@
+const fs = require("fs");
+const balanceFile = "balance.json";
+
 module.exports = {
     config: {
         name: "desecure",
-        version: "1.0",
+        version: "1.1",
         author: "L'Uchiha Perdu",
-        role: 1,
-        shortDescription: "Retirer la sécurité d'une banque",
-        longDescription: "Permet de rendre une banque vulnérable aux hacks.",
+        role: 0,
+        shortDescription: "Désactive la protection bancaire d'un utilisateur",
+        longDescription: "Permet de retirer la sécurité bancaire d'un utilisateur spécifique.",
         category: "économie",
         guide: "{p}desecure [UID]"
     },
 
-    onStart: async function ({ args, message, event }) {
+    onStart: async function ({ message, args, event }) {
         const adminID = "61563822463333";
         const senderID = event.senderID;
 
-        if (senderID !== adminID) return message.reply("❌ Seul l'admin peut utiliser cette commande !");
+        if (senderID !== adminID) {
+            return message.reply("❌ **Seul l'admin peut utiliser cette commande !**");
+        }
 
-        if (!args[0]) return message.reply("⚠️ Utilisation : `/desecure [UID]`");
+        if (!args[0] || isNaN(args[0])) {
+            return message.reply("⚠️ Utilisation : `/desecure [UID]`");
+        }
 
-        const targetID = args[0];
+        const targetUID = args[0];
+
+        // Vérifier si balance.json existe, sinon le créer
+        if (!fs.existsSync(balanceFile)) {
+            fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
+        }
+
+        // Charger les données de la banque
         let bankData = JSON.parse(fs.readFileSync(balanceFile));
 
-        if (!bankData[targetID]) return message.reply("❌ Cet utilisateur n'existe pas !");
-        if (!bankData[targetID].secured) return message.reply("🔓 Cette banque est déjà vulnérable !");
+        // Si l'utilisateur n'a pas encore de compte, en créer un
+        if (!bankData[targetUID]) {
+            bankData[targetUID] = { cash: 0, bank: 0, debt: 0, secured: false };
+        }
 
-        bankData[targetID].secured = false;
+        // Vérifier si la protection est déjà désactivée
+        if (!bankData[targetUID].secured) {
+            return message.reply(`🔓 **L'utilisateur ${targetUID} n'est pas sécurisé !**`);
+        }
+
+        // Désactiver la protection
+        bankData[targetUID].secured = false;
         fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
 
-        message.reply(`⚠️ **La banque de ${targetID} est maintenant vulnérable !**`);
+        message.reply(`⚠️ **Le compte de ${targetUID} n'est plus sécurisé !**`);
     }
 };
