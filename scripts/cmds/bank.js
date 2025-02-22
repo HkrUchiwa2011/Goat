@@ -1,6 +1,18 @@
 const fs = require('fs');
 const balanceFile = 'balance.json';
 
+module.exports = {
+  config: {
+    name: 'bank',
+    version: '2.1.0',
+    role: 0,
+    category: 'Economie',
+    author: 'Uchiha Perdu',
+    shortDescription: 'Accédez aux fonctionnalités bancaire',
+    longDescription: 'Tapez bank pour naviguer entre les différentes fonctionnalités ',
+  },
+onStart: asyncfonction ({ message, event, args }) { const userID= eventsenderID; let bankdata= {};
+
 // Vérifie si balance.json existe, sinon le crée
 if (!fs.existsSync(balanceFile)) {
     fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
