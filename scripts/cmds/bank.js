@@ -8,10 +8,54 @@ module.exports = {
     role: 0,
     category: 'Economie',
     author: 'Uchiha Perdu',
-    shortDescription: 'Accédez aux fonctionnalités bancaire',
-    longDescription: 'Tapez bank pour naviguer entre les différentes fonctionnalités ',
+    shortDescription: 'Accédez aux fonctionnalités bancaires',
+    longDescription: 'Tapez /bank pour naviguer entre les différentes fonctionnalités.',
   },
-onStart: asyncfonction ({ message, event, args }) { const userID= eventsenderID; let bankdata= {};
+
+  onStart: async function ({ message, event, args }) {
+    const userID = event.senderID;
+    
+    // Vérifie si balance.json existe, sinon le crée
+    if (!fs.existsSync(balanceFile)) {
+      fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
+    }
+
+    const balance = JSON.parse(fs.readFileSync(balanceFile));
+
+    // Initialiser les données si l'utilisateur n'existe pas encore
+    if (!balance[userID]) {
+      balance[userID] = { bank: 0, cash: 0, debt: 0, password: null };
+      fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
+    }
+
+    // Affichage du menu principal
+    const menu = `
+╔══════════════════╗
+      🏦 𝗕𝗔𝗡𝗤𝗨𝗘 🏦
+╚══════════════════╝
+📲 | Choisissez une option :
+✰ /bank solde → Voir votre solde bancaire
+✰ /bank retirer [montant] → Retirer de l'argent
+✰ /bank déposer [montant] → Déposer de l'argent
+✰ /bank transférer [montant] [UID] → Envoyer de l'argent
+✰ /bank prêt [montant] → Emprunter de l'argent (Max: 100 000)
+✰ /bank dette → Voir votre dette
+✰ /bank rembourser [montant] → Rembourser une dette
+✰ /bank top → Voir le classement des plus riches
+✰ /bank gamble [montant] → Parier de l'argent (x2 si gagné)
+✰ /bank intérêt → Collecter les intérêts (5% du solde bancaire)
+╔══════════════════╗
+    🔒 SÉCURITÉ 🏦
+╚══════════════════╝
+✰ /bank setpassword [password] → Définir un mot de passe
+✰ /bank password [ancien] [nouveau] → Modifier votre mot de passe
+✰ /bank removepassword [password] → Supprimer le mot de passe
+    `;
+
+    // Envoyer le menu bancaire à l'utilisateur
+    message.reply(menu);
+  }
+};
 
 // Vérifie si balance.json existe, sinon le crée
 if (!fs.existsSync(balanceFile)) {
@@ -156,7 +200,7 @@ function removePassword(userId, password) {
 
     balance[userId].password = null;
     fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-    return "🔓 Mot de passe supprimé avec succès !";
+    return "🔓 Mot de passe supprimé avec succès !"};
 
 // Fonction pour obtenir le solde de la banque
 function getBankBalance(userId) {
