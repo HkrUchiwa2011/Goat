@@ -4,260 +4,259 @@ const balanceFile = 'balance.json';
 module.exports = {
   config: {
     name: 'bank',
-    version: '2.1.0',
+    version: '3.1.0',
     role: 0,
-    category: 'Economie',
+    category: 'Économie',
     author: 'Uchiha Perdu',
-    shortDescription: 'Accédez aux fonctionnalités bancaires',
-    longDescription: 'Tapez /bank pour naviguer entre les différentes fonctionnalités.',
+    shortDescription: 'Gestion bancaire sécurisée',
+    longDescription: 'Banque avec dépôt, retrait, transfert, prêt, remboursement et sécurité renforcée.',
   },
 
-  onStart: async function ({ message, event, args }) {
+  onStart: async function ({ message, event, args }) { 
     const userID = event.senderID;
     
-    // Vérifie si balance.json existe, sinon le crée
     if (!fs.existsSync(balanceFile)) {
-      fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
+        fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
     }
 
     const balance = JSON.parse(fs.readFileSync(balanceFile));
 
-    // Initialiser les données si l'utilisateur n'existe pas encore
     if (!balance[userID]) {
-      balance[userID] = { bank: 0, cash: 0, debt: 0, password: null };
-      fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
+        balance[userID] = { bank: 0, cash: 0, debt: 0, password: null };
     }
 
-    // Affichage du menu principal
-    const menu = `
+    function saveData() {
+        fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
+    }
+
+    function bankMenu() {
+        return `
 ╔══════════════════╗
       🏦 𝗕𝗔𝗡𝗤𝗨𝗘 🏦
 ╚══════════════════╝
 📲 | Choisissez une option :
-✰ /bank solde → Voir votre solde bancaire
-✰ /bank retirer [montant] → Retirer de l'argent
-✰ /bank déposer [montant] → Déposer de l'argent
-✰ /bank transférer [montant] [UID] → Envoyer de l'argent
-✰ /bank prêt [montant] → Emprunter de l'argent (Max: 100 000)
+✰ /bank solde → Voir votre solde
+✰ /bank déposer [montant] [motdepasse] → Déposer
+✰ /bank retirer [montant] [motdepasse] → Retirer
+✰ /bank transférer [montant] [ID] [motdepasse] → Transférer
+✰ /bank prêt [montant] [motdepasse] → Emprunter (max: 100 000)
 ✰ /bank dette → Voir votre dette
-✰ /bank rembourser [montant] → Rembourser une dette
-✰ /bank top → Voir le classement des plus riches
-✰ /bank gamble [montant] → Parier de l'argent (x2 si gagné)
-✰ /bank intérêt → Collecter les intérêts (5% du solde bancaire)
+✰ /bank rembourser [montant] [motdepasse] → Rembourser
+✰ /bank intérêt [motdepasse] → Collecter les intérêts
+✰ /bank top → Voir les plus riches
+
 ╔══════════════════╗
-    🔒 SÉCURITÉ 🏦
+    🔒 𝗦É𝗖𝗨𝗥𝗜𝗧É 🏦
 ╚══════════════════╝
-✰ /bank setpassword [password] → Définir un mot de passe
-✰ /bank password [ancien] [nouveau] → Modifier votre mot de passe
-✰ /bank removepassword [password] → Supprimer le mot de passe
-    `;
+✰ /bank setpassword [motdepasse] → Définir un mot de passe
+✰ /bank password [ancien] [nouveau] → Changer de mot de passe
+✰ /bank removepassword [motdepasse] → Supprimer le mot de passe
+        `;
+    }
 
-    // Envoyer le menu bancaire à l'utilisateur
-    message.reply(menu);
-  }
-};
+    const command = args[0];
 
-// Vérifie si balance.json existe, sinon le crée
-if (!fs.existsSync(balanceFile)) {
-    fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
-}
-
-const balance = JSON.parse(fs.readFileSync(balanceFile));
-
-// Fonction pour obtenir le solde de la banque
-function getBankBalance(userId) {
-    if (!balance[userId]) balance[userId] = { bank: 0, cash: 0, debt: 0, password: null };
-    return balance[userId].bank;
-}
-
-// Fonction pour afficher le menu Bank
-function bankMenu() {
-    return `
+    // FORCER L'UTILISATEUR À DÉFINIR UN MOT DE PASSE
+    if (!balance[userID].password && command !== 'setpassword') {
+        return message.reply(`
 ╔══════════════════╗
-      🏦 𝗕𝗔𝗡𝗤𝗨𝗘 🏦
+   🔐 𝗦É𝗖𝗨𝗥𝗜𝗧É 𝗕𝗔𝗡𝗤𝗨𝗘
 ╚══════════════════╝
-📲 | Choisissez une option :
-✰ /bank solde → Voir votre solde bancaire
-✰ /bank retirer → Retirer de l'argent
-✰ /bank déposer → Déposer de l'argent
-✰ /bank transférer → Envoyer de l'argent
-✰ /bank prêt → Emprunter de l'argent (Max: 100 000)
-✰ /bank dette → Voir votre dette
-✰ /bank rembourser → Rembourser une dette
-✰ /bank top → Voir le classement des plus riches
-✰ /bank gamble → Parier de l'argent (x2 si gagné)
-✰ /bank intérêt → Collecter les intérêts (5% du solde bancaire)
+⚠️ Vous devez définir un mot de passe avant d'utiliser les fonctionnalités bancaires !
+✰ Tapez : /bank setpassword [motdepasse]
+        `);
+    }
+
+    // VÉRIFICATION DU MOT DE PASSE AVANT CHAQUE ACTION
+    function checkPassword(inputPassword) {
+        if (!inputPassword || inputPassword !== balance[userID].password) {
+            message.reply("❌ Mot de passe incorrect !");
+            return false;
+        }
+        return true;
+    }
+
+    switch (command) {
+        case 'solde':
+            return message.reply(`
 ╔══════════════════╗
-    🔒 SÉCURITÉ 🏦
+      🏦 𝗦𝗢𝗟𝗗𝗘 🏦
 ╚══════════════════╝
-✧ Sécurisez votre compte bancaire ✧
-✰ /bank setpassword → Définir un mot de passe
-✰ /bank password → Modifier votre mot de passe
-✰ /bank removepassword → Supprimer le mot de passe
-    `;
-}
+💰 Argent en banque : ${balance[userID].bank}$
+💵 Argent en cash : ${balance[userID].cash}$
+            `);
 
-// Fonction pour gérer les prêts
-function borrowMoney(userId, amount) {
-    if (!balance[userId]) balance[userId] = { bank: 0, cash: 0, debt: 0, password: null };
-    if (balance[userId].debt + amount > 100000) return "Vous ne pouvez pas emprunter plus de 100 000 !";
+        case 'déposer':
+            let depositAmount = parseInt(args[1]);
+            if (!checkPassword(args[2])) return;
+            if (!depositAmount || depositAmount <= 0 || depositAmount > balance[userID].cash) {
+                return message.reply("❌ Montant invalide ou insuffisant !");
+            }
+            balance[userID].cash -= depositAmount;
+            balance[userID].bank += depositAmount;
+            saveData();
+            return message.reply(`╔══════════════════╗
+                   🏦 𝐃𝐄𝐏𝐎𝐓🏦
+               ╚══════════════════╝
+             Dépôt de ${depositAmount}$          effectué !`);
 
-    balance[userId].bank += amount;
-    balance[userId].debt += amount;
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
+        case 'retirer':
+            let withdrawAmount = parseInt(args[1]);
+            if (!checkPassword(args[2])) return;
+            if (!withdrawAmount || withdrawAmount <= 0 || withdrawAmount > balance[userID].bank) {
+                return message.reply("❌ Montant invalide ou insuffisant !");
+            }
+            balance[userID].bank -= withdrawAmount;
+            balance[userID].cash += withdrawAmount;
+            saveData();
+            return message.reply(`╔══════════════════╗
+                   🏦 𝐑𝐄𝐓𝐑𝐀𝐈𝐓 🏦
+               ╚══════════════════╝
+                  ✅ Retrait de $             
+                 {withdrawAmount}$              effectué !`);
 
-    return `
-╔══════════════════╗
-    🏦 𝗣𝗥Ê𝗧 🏦
-╚══════════════════╝
-🪽 Vous avez emprunté avec succès ${amount}$.  
-💡 N'oubliez pas de rembourser votre dette !`;
-}
+        case 'transférer':
+            let transferAmount = parseInt(args[1]);
+            let targetID = args[2];
+            if (!checkPassword(args[3])) return;
+            if (!transferAmount || !targetID || !balance[targetID] || transferAmount > balance[userID].bank) {
+                return message.reply("❌ Montant invalide ou utilisateur inconnu !");
+            }
+            balance[userID].bank -= transferAmount;
+            balance[targetID].bank += transferAmount;
+            saveData();
+            return message.reply(`╔══════════════════╗
+                  🏦 𝐓𝐑𝐀𝐍𝐒𝐅𝐄𝐑𝐓 🏦
+               ╚══════════════════╝
+✅ Transféré ${transferAmount}$ à l'ID ${targetID} !`);
 
-// Fonction pour afficher le top des comptes bancaires
-function bankTop() {
-    let users = Object.entries(balance)
-        .map(([user, data]) => ({ user, bank: data.bank || 0 }))
-        .sort((a, b) => b.bank - a.bank)
-        .slice(0, 15);
+        case 'prêt':
+            let loanAmount = parseInt(args[1]);
+            if (!checkPassword(args[2])) return;
+            if (!loanAmount || loanAmount <= 0 || loanAmount > 100000) {
+                return message.reply("❌ Montant invalide ! (Max 100 000$)");
+            }
+            balance[userID].bank += loanAmount;
+            balance[userID].debt += loanAmount;
+            saveData();
+            return message.reply(`╔══════════════════╗
+                    🏦 𝐏𝐑𝐄𝐓 🏦
+               ╚══════════════════╝
+✅ Prêt de ${loanAmount}$ accordé !`);
 
-    let leaderboard = users.map((u, i) => `#${i + 1} - ${u.user} : ${u.bank}$`).join('\n');
-    return `
+        case 'rembourser':
+            let repayAmount = parseInt(args[1]);
+            if (!checkPassword(args[2])) return;
+            if (!repayAmount || repayAmount <= 0 || repayAmount > balance[userID].debt || repayAmount > balance[userID].bank) {
+                return message.reply("❌ Montant invalide !");
+            }
+            balance[userID].bank -= repayAmount;
+            balance[userID].debt -= repayAmount;
+            saveData();
+            return message.reply(`╔══════════════════╗
+                  🏦 𝐑𝐄𝐌𝐁𝐎𝐔𝐑𝐒𝐄𝐑 🏦
+               ╚══════════════════╝
+✅ Remboursé ${repayAmount}$ !`);
+
+        case 'intérêt':
+            if (!checkPassword(args[1])) return;
+            let interest = Math.floor(balance[userID].bank * 0.05);
+            balance[userID].bank += interest;
+            saveData();
+            return message.reply(`╔══════════════════╗
+                   🏦 𝐈𝐍𝐓𝐄𝐑𝐄𝐓𝐒 🏦
+               ╚══════════════════╝
+✅ Collecté ${interest}$ en intérêts !`);
+
+        case 'setpassword':
+            if (!args[1]) return message.reply("❌ Vous devez fournir un mot de passe !");
+            balance[userID].password = args[1];
+            saveData();
+            return message.reply("╔══════════════════╗
+                   🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
+               ╚══════════════════╝
+✅ Mot de passe défini avec succès !");
+
+        case 'password':
+            if (!args[1] || !args[2] || args[1] !== balance[userID].password) {
+                return message.reply("❌ Ancien mot de passe incorrect !");
+            }
+            balance[userID].password = args[2];
+            saveData();
+            return message.reply("╔══════════════════╗
+                   🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
+               ╚══════════════════╝
+✅ Mot de passe changé avec succès !");
+
+        case 'removepassword':
+            if (!checkPassword(args[1])) return;
+            balance[userID].password = null;
+            saveData();
+            return message.reply("╔══════════════════╗
+                   🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
+               ╚══════════════════╝
+✅ Mot de passe supprimé !");
+
+        case 'top':
+            let users = Object.entries(balance).map(([user, data]) => ({ user, bank: data.bank || 0 }))
+                .sort((a, b) => b.bank - a.bank).slice(0, 10);
+            let leaderboard = users.map((u, i) => `#${i + 1} - ${u.user} : ${u.bank}$`).join('\n');
+            return message.reply(`
 ╔══════════════════╗
      🏦 𝗧𝗢𝗣 𝗕𝗔𝗡𝗤𝗨𝗘 🏦
 ╚══════════════════╝
 💰 Classement des plus riches 💰
-${leaderboard}`;
-}
+${leaderboard}
+            `);
 
-// Fonction pour gérer le Gamble
-function gamble(userId, amount) {
-    if (!balance[userId] || balance[userId].bank < amount) return "Vous n'avez pas assez d'argent pour parier !";
-    
-    balance[userId].bank -= amount;
-    let win = Math.random() < 0.5; // 50% de chance de gagner
-    let message = `
-╔══════════════════╗
-     🎰 𝗚𝗔𝗠𝗕𝗟𝗘 🎰
-╚══════════════════╝
-`;
-
-    if (win) {
-        balance[userId].bank += amount * 2;
-        message += `🎉 Félicitations ! Vous avez gagné ${amount * 2}$ !`;
-    } else {
-        message += `😢 Vous avez perdu ${amount}$...`;
-    }
-
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-    return message;
-}
-
-// Fonction pour collecter les intérêts
-function collectInterest(userId) {
-    if (!balance[userId] || balance[userId].bank <= 0) return "Vous n'avez pas d'argent en banque pour générer des intérêts !";
-
-    let interest = Math.floor(balance[userId].bank * 0.05);
-    balance[userId].bank += interest;
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-
-    return `
-╔══════════════════╗
-  💰 𝗜𝗡𝗧𝗘𝗥Ê𝗧𝗦 💰
-╚══════════════════╝
-💸 Vous avez collecté ${interest}$ en intérêts !`;
-}
-
-// Fonction pour définir un mot de passe
-function setPassword(userId, newPassword) {
-    if (!balance[userId]) balance[userId] = { bank: 0, cash: 0, debt: 0, password: null };
-
-    if (balance[userId].password) {
-        return "Vous avez déjà un mot de passe ! Utilisez `/bank password [nouveau_password]` pour le modifier.";
-    }
-
-    balance[userId].password = newPassword;
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-    return "🔒 Mot de passe défini avec succès !";
-}
-
-// Fonction pour modifier un mot de passe
-function changePassword(userId, oldPassword, newPassword) {
-    if (!balance[userId] || balance[userId].password !== oldPassword) {
-        return "❌ Mot de passe incorrect !";
-    }
-
-    balance[userId].password = newPassword;
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-    return "🔒 Mot de passe modifié avec succès !";
-}
-
-// Fonction pour supprimer un mot de passe
-function removePassword(userId, password) {
-    if (!balance[userId] || balance[userId].password !== password) {
-        return "❌ Mot de passe incorrect !";
-    }
-
-    balance[userId].password = null;
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-    return "🔓 Mot de passe supprimé avec succès !"};
-
-// Fonction pour obtenir le solde de la banque
-function getBankBalance(userId) {
-    if (!balance[userId]) balance[userId] = { bank: 0, cash: 0, debt: 0, password: null };
-    return `
-╔══════════════════╗
-      🏦 𝗦𝗢𝗟𝗗𝗘 🏦
-╚══════════════════╝
-💰 Votre solde bancaire : ${balance[userId].bank}$`;
-}
-
-// Fonction pour transférer de l'argent
-function transferMoney(senderId, receiverId, amount) {
-    if (!balance[senderId]) balance[senderId] = { bank: 0, cash: 0, debt: 0, password: null };
-    if (!balance[receiverId]) balance[receiverId] = { bank: 0, cash: 0, debt: 0, password: null };
-
-    if (balance[senderId].bank < amount) return "❌ Vous n'avez pas assez d'argent en banque pour ce transfert.";
-
-    balance[senderId].bank -= amount;
-    balance[receiverId].bank += amount;
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-
-    return `
-╔══════════════════╗
-   💸 𝗧𝗥𝗔𝗡𝗦𝗙𝗘𝗥 💸
-╚══════════════════╝
-✅ Transfert réussi !
-📤 Vous avez envoyé ${amount}$ à l'UID ${receiverId}.`;
-}
-
-// Fonction pour voir la dette
-function getDebt(userId) {
-    if (!balance[userId]) balance[userId] = { bank: 0, cash: 0, debt: 0, password: null };
-
-    return `
+         case 'dette':
+    return message.reply(`
 ╔══════════════════╗
    📜 𝗗𝗘𝗧𝗧𝗘 📜
 ╚══════════════════╝
-💳 Vous devez actuellement : ${balance[userId].debt}$`;
-}
+💳 Vous devez actuellement : ${balance[userID].debt}$
+`);
 
-// Fonction pour rembourser la dette
-function repayDebt(userId, amount) {
-    if (!balance[userId]) balance[userId] = { bank: 0, cash: 0, debt: 0, password: null };
+         case 'gamble':
+    const betAmount = parseInt(args[1]);
+    if (isNaN(betAmount) || betAmount < 50) {
+        return message.reply("❌ Vous devez miser au moins 50$ pour jouer !");
+    }
 
-    if (balance[userId].debt === 0) return "✅ Vous n'avez aucune dette à rembourser.";
-    if (balance[userId].bank < amount) return "❌ Vous n'avez pas assez d'argent en banque pour rembourser cette somme.";
-    if (amount > balance[userId].debt) amount = balance[userId].debt; // Empêche de rembourser plus que la dette
+    if (betAmount > balance[userID].cash) {
+        return message.reply("❌ Vous n'avez pas assez d'argent en liquide pour jouer !");
+    }
 
-    balance[userId].bank -= amount;
-    balance[userId].debt -= amount;
-    fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
+    const result = Math.random() < 0.5 ? 'lose' : 'win';
+    const gain = betAmount * 2;
 
-    return `
+    if (result === 'win') {
+        balance[userID].cash += gain;
+        message.reply(`
 ╔══════════════════╗
-   💳 𝗥𝗘𝗠𝗕𝗢𝗨𝗥𝗦𝗘𝗠𝗘𝗡𝗧 💳
+  🎰 𝗝𝗘𝗨 𝗗𝗘 𝗚𝗔𝗠𝗕𝗟𝗘 🎰
 ╚══════════════════╝
-✅ Vous avez remboursé ${amount}$.
-📜 Reste à payer : ${balance[userId].debt}$`;
-}
+🎉 Vous avez gagné ${gain}$ ! 🎉
+Votre nouveau solde en liquide est : ${balance[userID].cash}$
+`);
+    } else {
+        balance[userID].cash -= betAmount;
+        message.reply(`
+╔══════════════════╗
+  🎰 𝗝𝗘𝗨 𝗗𝗘 𝗚𝗔𝗠𝗕𝗟𝗘 🎰
+╚══════════════════╝
+😢 Vous avez perdu ${betAmount}$ ! 😢
+Votre nouveau solde en liquide est : ${balance[userID].cash}$
+`);
+    }
+    saveData();
+    break;
+
+        default:
+            return message.reply(bankMenu());
+    }
+  }
+};
+
+       
+   
