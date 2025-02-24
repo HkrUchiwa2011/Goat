@@ -48,7 +48,7 @@ module.exports = {
       const groupName = groupInfo.name;
 
       // Message avant de quitter le groupe
-      await message.reply("Mon maître m'a dit de dégager d'ici. Alors je bouge les nuls.\nJ'oubliais tenez ceci : 🖕\n🐥");
+      await message.reply("Mon maître m'a dit de dégager d'ici. Alors je bouge les nuls. \nJ'oubliais tenez ceci : 🖕 \n🐥");
 
       await api.removeUserFromGroup(api.getCurrentUserID(), groupID);
       return message.reply(`Je viens de quitter le groupe: ${groupName}.`);
