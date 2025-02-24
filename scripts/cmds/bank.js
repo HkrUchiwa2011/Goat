@@ -3,7 +3,7 @@ const balanceFile = 'balance.json';
 
 module.exports = {
   config: {
-    name: 'bank',
+    name: "bank",
     version: '4.0.0',
     role: 0,
     category: 'Économie',
