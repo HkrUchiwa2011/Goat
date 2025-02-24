@@ -1,54 +1,38 @@
 const fs = require('fs');
-const path = require('path');
+const { GoatWrapper } = require('fca-liane-utils');
 
 module.exports = {
-  config: {
-    name: "file",
-    version: "2.0",
-    author: "Raphael XShota",
-    countDown: 5,
-    role: 0,
-    shortDescription: "Send bot script",
-    longDescription: "Send bot specified file or list available files",
-    category: "owner",
-    guide: "{pn} [file name | list]. Ex: .{pn} filename or .{pn} list"
-  },
+	config: {
+		name: "file",
+		version: "1.0",
+		author: "XxGhostxX ",
+		countDown: 5,
+		role: 0,
+		shortDescription: "Send bot script",
+		longDescription: "Send bot specified file ",
+		category: "𝗢𝗪𝗡𝗘𝗥",
+		guide: "{pn} file name. Ex: .{pn} filename"
+	},
 
-  onStart: async function ({ message, args, api, event }) {
-    const permission = ["61563822463333"];
-    if (!permission.includes(event.senderID)) {
-      return api.sendMessage("Sérieusement tu te prends pour qui hein. Toi le minable tu veux utliser cette commande ? Pathétique 🙂", event.threadID, event.messageID);
-    }
-    
-    if (!args[0]) {
-      return api.sendMessage("Please provide a file name or use 'list' to see available files.", event.threadID, event.messageID);
-    }
+	onStart: async function ({ message, args, api, event }) {
+		const permission = ["61563822463333"];
+		if (!permission.includes(event.senderID)) {
+			return api.sendMessage(" 𝗧𝘂 𝗻'𝗮 𝗽𝗮𝘀 𝗹' 𝗮𝘂𝘁𝗼𝗿𝗶𝘀𝗮𝘁𝗶𝗼𝗻 𝗱'𝘂𝘁𝗶𝗹𝗶𝘀𝗲𝗿 𝗰𝗲𝘁𝘁𝗲 𝗰𝗺𝗱...𝗗𝗨𝗖𝗢𝗡 !", event.threadID, event.messageID);
+		}
 
-    if (args[0].toLowerCase() === 'list') {
-      const files = fs.readdirSync(__dirname).filter(file => file.endsWith('.js'));
-      return api.sendMessage(`Available files:\n${files.join('\n')}`, event.threadID, event.messageID);
-    }
+		const fileName = args[0];
+		if (!fileName) {
+			return api.sendMessage("𝗟𝗲 𝗻𝗼𝗺 𝗱𝘂 𝗳𝗶𝗰𝗵𝗶𝗲𝗿 𝘀𝘁𝗽...", event.threadID, event.messageID);
+		}
 
-    const fileName = args[0];
-    const filePath = path.join(__dirname, `${fileName}.js`);
+		const filePath = __dirname + `/${fileName}.js`;
+		if (!fs.existsSync(filePath)) {
+			return api.sendMessage(`File not found: ${fileName}.js`, event.threadID, event.messageID);
+		}
 
-    if (!fs.existsSync(filePath)) {
-      return api.sendMessage(`File not found: ${fileName}.js`, event.threadID, event.messageID);
-    }
-
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    const fileSize = fs.statSync(filePath).size;
-    const fileSizeKB = (fileSize / 1024).toFixed(2);
-
-    api.sendMessage({ 
-      body: `File: ${fileName}.js\nSize: ${fileSizeKB} KB\n\nContent:\n${fileContent}`,
-      attachment: fs.createReadStream(filePath)
-    }, event.threadID, (err, info) => {
-      if (err) {
-        console.error(err);
-        api.sendMessage("An error occurred while sending the file.", event.threadID, event.messageID);
-      }
-      fs.unlinkSync(filePath);
-    });
-  }
+		const fileContent = fs.readFileSync(filePath, 'utf8');
+		api.sendMessage({ body: fileContent }, event.threadID);
+	}
 };
+const wrapper = new GoatWrapper(module.exports);
+wrapper.applyNoPrefix({ allowPrefix: true });
