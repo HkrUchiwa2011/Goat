@@ -29,7 +29,8 @@ module.exports = {
 			welcomeMessage: "Je peux savoir qui est l'imbécile qui m'a ajouté dans ce groupe. Mais bon Merci 🥲!\nMon prefix est: %1\nTu veux m'utiliser à ta guise et pour voir la liste de mes commandes tape: %1help",
 			multiple1: "à toi",
 			multiple2: "à vous",
-			defaultWelcomeMessage: `Salut le con. Comment il s'appelle déjà ? 🤔 Ah voilà\n{userName}.\nMauvaise venue {multiple} dans ce groupe de nul :{boxName}\nBienvenue en enfer 😈`
+
+defaultWelcomeMessage: `Salut ${multiple ? "les cons" : "le con"}. Comment ${multiple ? "ils s'appellent " : "il s'appelle"} déjà ? 🤔 Ah voilà\n{userName}.\nMauvaise venue {multiple} dans ce groupe de nul :{boxName}\nBienvenue en enfer 😈``
 		}
 	},
 
