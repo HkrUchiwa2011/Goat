@@ -209,6 +209,18 @@ ${balance[userID].cash}$
                ╚════════════╝
 ❌ 😢 Vous avez perdu ${amount}$ !`);
             }
+       case 'intérêt':
+    if (!checkPassword()) return;
+    let interest = Math.floor(balance[userID].bank * 0.05);
+    balance[userID].bank += interest;
+    saveData();
+    return message.reply(`
+╔══════════╗
+║  Intérêt  ║
+╚══════════╝
+✅ Intérêts collectés : ${interest}$ !
+    `); 
+           }
 
         case 'top':
             let users = Object.entries(balance)
