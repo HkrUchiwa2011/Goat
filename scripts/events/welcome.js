@@ -27,7 +27,7 @@ module.exports = {
 			session3: "afternoon",
 			session4: "evening",
 			welcomeMessageAdmin: "Maître suprême, merci de m'avoir invoqué dans ce groupe.\nMon préfixe est : %1\nQue puis-je faire pour vous ? 🤖",
-			welcomeMessage: "Je peux savoir l'imbécile, le ducon qui m'a ajouté dans ce groupe. Mais bon, merci 🥲 !\nMon préfixe est : %1\nTu veux m'utiliser ? Tape : %1help",
+			welcomeMessage: "Je peux savoir l'imbécile, le ducon qui m'a ajouté dans ce groupe.😡 ! \nVous vouliez mon prefix non ?   \nTapez : %1\nPour voir la liste de mes commandes tapez: %1help \nEt faites gaffe, si jamais vous faites un truc de vicieux je dirai à mon maître de me faire partr🐥",
 			multiple1: "à toi",
 			multiple2: "à vous",
 			defaultWelcomeMessage: `Salut ${multiple ? "les cons" : "le con"}. Comment ${multiple ? "ils s'appellent " : "il s'appelle"} déjà ? 🤔 Ah voilà\n{userName}.\nMauvaise venue {multiple} dans ce groupe de nul : {boxName}.\nBienvenue en enfer 😈`
