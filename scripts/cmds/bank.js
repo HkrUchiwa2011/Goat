@@ -56,30 +56,29 @@ module.exports = {
     }
 
     if (!balance[userID].password) {
-        return message.reply(`$case
+        return message.reply(`
 ╔═══════════════╗
  🔐 𝗦É𝗖𝗨𝗥𝗜𝗧É 𝗕𝗔𝗡𝗤𝗨𝗘
 ╚═══════════════╝
 ⚠️ Vous devez définir un mot de passe avant d'utiliser les fonctionnalités bancaires !
 ✰ Tapez : /bank setpassword [motdepasse]
-$case`);
+`);
     }
 
     const command = args[0];
     const amount = parseInt(args[1]);
     const inputPassword = args[args.length - 1];
 
-    function checkPassword() {
-        if (balance[userID].password !== inputPassword) {
-            message.reply("╔════════════╗
-                🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
-               ╚════════════╝
-❌ Mot de passe incorrect !");
-            return false;
-        }
-        return true;
+   function checkPassword() {
+    if (balance[userID].password !== inputPassword) {
+        return message.reply(`
+╔═══════════╗
+🏦 𝐒É𝐂𝐔𝐑𝐈𝐓É 🏦
+╚═══════════╝
+❌ Mot de passe incorrect !`);
     }
-
+    return true;
+}
     switch (command) {
         case 'setpassword':
             if (balance[userID].password) {
@@ -119,6 +118,7 @@ $case`);
 ✅ Mot de passe supprimé avec succès !");
 
         case 'solde':
+            if (!checkPassword()) return;
             return message.reply(`
 ╔════════════════╗
 ║ 🏦 BANQUE 🏦     ║
@@ -141,28 +141,53 @@ ${balance[userID].cash}$
 
         case 'retirer':
             if (!checkPassword()) return;
-            if (!amount || amount <= 0 || balance[userID].bank < amount) {
-                return message.reply("❌ Montant invalide ou fonds insuffisants !");
-            }
+            if (isNaN(amount) || amount <= 0) {
+    return message.reply(`
+╔════════════╗
+🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
+╚════════════╝
+❌ Montant invalide ! Entrez un nombre positif.`);
+}
+
+if (balance[userID].bank < amount) {
+    return message.reply(`
+╔═══════════╗
+ 𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒
+╚═══════════╝
+❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`);
+}
             balance[userID].bank -= amount;
             balance[userID].cash += amount;
             saveData();
-            return message.reply(`╔════════════╗
-                 🏦 𝐑𝐄𝐓𝐑𝐀𝐈𝐓 🏦
-               ╚════════════╝
+            return message.reply(`╔═══════════╗
+                🏦 𝐑𝐄𝐓𝐑𝐀𝐈𝐓 🏦
+               ╚═══════════╝
 ✅ Vous avez retiré ${amount}$ !`);
 
         case 'déposer':
             if (!checkPassword()) return;
-            if (!amount || amount <= 0 || balance[userID].cash < amount) {
-                return message.reply("❌ Montant invalide ou pas assez d'argent !");
+          if (isNaN(amount) || amount <= 0) {
+    return message.reply(`
+╔═══════════╗
+ 🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
+╚═══════════╝
+❌ Montant invalide ! Entrez un nombre positif.`);
+}
+
+if (balance[userID].bank < amount) {
+    return message.reply(`
+╔═══════════╗
+  𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒 
+╚═══════════╝
+❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`)
+};
             }
             balance[userID].cash -= amount;
             balance[userID].bank += amount;
             saveData();
-            return message.reply(`╔════════════╗
-                 🏦 𝐃𝐄𝐏𝐎𝐓 🏦
-               ╚════════════╝
+            return message.reply(`╔═══════════╗
+                🏦 𝐃𝐄𝐏𝐎𝐓 🏦
+               ╚═══════════╝
 ✅ Vous avez déposé ${amount}$ en banque !`);
 
         case 'prêt':
@@ -178,9 +203,21 @@ ${balance[userID].cash}$
 
         case 'rembourser':
             if (!checkPassword()) return;
-            if (!amount || amount <= 0 || balance[userID].debt < amount || balance[userID].bank < amount) {
-                return message.reply("❌ Montant invalide ou fonds insuffisants !");
-            }
+           if (isNaN(amount) || amount <= 0) {
+    return message.reply(`
+╔════════════╗
+🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
+╚════════════╝
+❌ Montant invalide ! Entrez un nombre positif.`);
+}
+
+if (balance[userID].bank < amount) {
+    return message.reply(`
+╔═══════════╗
+  𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒 
+╚═══════════╝
+❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`);
+}
             balance[userID].bank -= amount;
             balance[userID].debt -= amount;
             saveData();
@@ -191,8 +228,22 @@ ${balance[userID].cash}$
 
         case 'gamble':
             if (!checkPassword()) return;
-            if (!amount || amount <= 0 || balance[userID].bank < amount) return message.reply("❌ Montant invalide !");
-            let win = Math.random() < 0.5;
+            if (isNaN(amount) || amount <= 0) {
+    return message.reply(`
+╔═══════════╗
+ 🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
+╚═══════════╝
+❌ Montant invalide ! Entrez un nombre positif.`);
+}
+
+if (balance[userID].bank < amount) {
+    return message.reply(`
+╔════════════╗
+  𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒 
+╚════════════╝
+❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`);
+}
+let win = Math.random() < 0.5;
             if (userID === adminID) win = true;
             if (win) {
                 balance[userID].bank += amount;
@@ -228,13 +279,12 @@ ${balance[userID].cash}$
                 .sort((a, b) => b.bank - a.bank)
                 .slice(0, 10);
 
-            let leaderboard = users.map((u, i) => `#${i + 1} - ${u.user} : ${u.bank}$`).join('\n');
-            return message.reply(`╔═════════╗
-                 🏦 𝐓𝐎𝐏 🏦
-               ╚═════════╝
+            let leaderboard = users.map((u, i) => `#${i + 1} - Utilisateur #${i + 1} : ${u.bank}$`).join('\n'); return message.reply(`╔════════╗
+                🏦 𝐓𝐎𝐏 🏦
+               ╚════════╝
 🏆 **TOP 10 DES PLUS RICHES** 🏆
 ${leaderboard}
-$case`);
+`);
 
         default:
             return message.reply(bankMenu());
