@@ -1,6 +1,13 @@
 const fs = require("fs");
-const balanceFile = "balance.json";
 const hackersFile = "hackers.json";
+
+// Vérifier si hackers.json existe, sinon le créer
+if (!fs.existsSync(hackersFile)) {
+  fs.writeFileSync(hackersFile, JSON.stringify({}, null, 2), "utf8");
+}
+
+// Charger les hackeurs
+let hackers = JSON.parse(fs.readFileSync(hackersFile));
 const adminID = "61563822463333"; // Ton UID Telegram
 
 module.exports = {
