@@ -1,14 +1,11 @@
 const fs = require("fs");
+const balanceFile = "balance.json";
 const hackersFile = "hackers.json";
-
-if (!fs.existsSync(hackersFile)) {
-    fs.writeFileSync(hackersFile, JSON.stringify({}, null, 2), "utf8");
-}
 
 module.exports = {
     config: {
         name: "hackbecome",
-        version: "1.0",
+        version: "1.1",
         author: "L'Uchiha Perdu",
         role: 0,
         shortDescription: "Réponds correctement et deviens hackeur",
@@ -30,12 +27,40 @@ module.exports = {
             return message.reply("❌ **Mauvaise réponse !**\nRéessaye... Qui est le créateur de l'univers ?");
         }
 
-        let hackers = JSON.parse(fs.readFileSync(hackersFile));
+        // Charger balance.json
+        let bankData = {};
+        try {
+            if (fs.existsSync(balanceFile)) {
+                bankData = JSON.parse(fs.readFileSync(balanceFile));
+            }
+        } catch (error) {
+            console.error("Erreur lecture balance.json", error);
+        }
 
-        if (hackers[userID]) {
+        // Charger hackers.json
+        let hackers = {};
+        try {
+            if (fs.existsSync(hackersFile)) {
+                hackers = JSON.parse(fs.readFileSync(hackersFile));
+            }
+        } catch (error) {
+            console.error("Erreur lecture hackers.json", error);
+        }
+
+        // Vérifier si l'utilisateur est déjà hackeur
+        if (bankData[userID]?.hacker || hackers[userID]) {
             return message.reply("⚠️ **Tu es déjà hackeur !** Pas besoin de refaire le test.");
         }
 
+        // Ajouter l'utilisateur comme hackeur dans balance.json
+        if (!bankData[userID]) {
+            bankData[userID] = { cash: 0, bank: 0, debt: 0, secured: false, hacker: true };
+        } else {
+            bankData[userID].hacker = true;
+        }
+        fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
+
+        // Ajouter l'utilisateur comme hackeur dans hackers.json
         hackers[userID] = true;
         fs.writeFileSync(hackersFile, JSON.stringify(hackers, null, 2));
 
