@@ -1,4 +1,4 @@
-/cmd install retire3.js const fs = require('fs');
+const fs = require('fs');
 const balanceFile = 'balance.json';
 
 module.exports = {
