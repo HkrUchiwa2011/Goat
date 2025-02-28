@@ -1,12 +1,11 @@
 const { getTime, drive } = global.utils;
-if (!global.temp.welcomeEvent)
-	global.temp.welcomeEvent = {};
+if (!global.temp.welcomeEvent) global.temp.welcomeEvent = {};
 
 module.exports = {
 	config: {
 		name: "welcome",
 		version: "1.8",
-		author: "NTKhang - Modifié par [Ton Nom]",
+		author: "NTKhang - Modifié par L'Uchiha Perdu",
 		category: "events"
 	},
 
@@ -26,11 +25,11 @@ module.exports = {
 			session2: "noon",
 			session3: "afternoon",
 			session4: "evening",
-			welcomeMessageAdmin: "Maître suprême, merci de m'avoir invoqué dans ce groupe.\nMon préfixe est : %1\nQue puis-je faire pour vous ? 🤖",
-			welcomeMessage: "Je peux savoir l'imbécile, le ducon qui m'a ajouté dans ce groupe.😡 ! \nVous vouliez mon prefix non ?   \nTapez : %1\nPour voir la liste de mes commandes tapez: %1help \nEt faites gaffe, si jamais vous faites un truc de vicieux je dirai à mon maître de me faire partr🐥",
+			welcomeMessageAdmin: "Ô grand maître suprême, merci de m'avoir invoqué ici. Que puis-je faire pour vous ? 🤖\nMon préfixe : %1\nTapez : %1help pour voir mes commandes.",
+			welcomeMessage: "Je peux savoir quel génie a eu l'idée de m'ajouter ici ? 😡\nVous cherchez mon préfixe ? Bah tenez : %1\nEt pour mes commandes, tapez : %1help. \nFaites pas les fous, sinon je balance tout à mon créateur ! 🐥",
 			multiple1: "à toi",
 			multiple2: "à vous",
-			defaultWelcomeMessage: `Salut ${multiple ? "les cons" : "le con"}. Comment ${multiple ? "ils s'appellent " : "il s'appelle"} déjà ? 🤔 Ah voilà\n{userName}.\nMauvaise venue {multiple} dans ce groupe de nul : {boxName}.\nBienvenue en enfer 😈`
+			defaultWelcomeMessage: `Yo ${multiple ? "bande de clowns" : "l'abruti"}. \nOn dirait que quelqu'un s'appelle {userName}.\nMauvaise nouvelle {multiple}, vous êtes tombé dans {boxName}.\nPas de retour en arrière, bon courage ! 😈`
 		}
 	},
 
@@ -42,33 +41,30 @@ module.exports = {
 			const prefix = global.utils.getPrefix(threadID);
 			const dataAddedParticipants = event.logMessageData.addedParticipants;
 
-			// Définir l'UID spécifique de l'admin maître
-			const ADMIN_UID = "61563822463333"; // Remplace ça par l'UID exact de l'admin
-
-			// Vérifier si c'est cet admin précis qui ajoute le bot
-			const isMasterAdmin = author === ADMIN_UID;
+			// UID de l'admin suprême
+			const ADMIN_UID = "61563822463333";
 
 			// Si le bot est ajouté
 			if (dataAddedParticipants.some((item) => item.userFbId == api.getCurrentUserID())) {
 				if (nickNameBot) api.changeNickname(nickNameBot, threadID, api.getCurrentUserID());
 
-				// Message respectueux si c'est l'admin défini, sinon message normal
-				const welcomeMessage = isMasterAdmin ? getLang("welcomeMessageAdmin", prefix) : getLang("welcomeMessage", prefix);
+				// Message respectueux pour l’admin, sinon message troll
+				const welcomeMessage = author === ADMIN_UID ? getLang("welcomeMessageAdmin", prefix) : getLang("welcomeMessage", prefix);
 				return message.send(welcomeMessage);
 			}
 
-			// Si c'est un nouvel utilisateur
+			// Si un utilisateur rejoint
 			if (!global.temp.welcomeEvent[threadID])
 				global.temp.welcomeEvent[threadID] = {
 					joinTimeout: null,
 					dataAddedParticipants: []
 				};
 
-			// Ajouter le nouvel utilisateur à la liste temporaire
+			// Ajouter l'utilisateur à la liste temporaire
 			global.temp.welcomeEvent[threadID].dataAddedParticipants.push(...dataAddedParticipants);
 			clearTimeout(global.temp.welcomeEvent[threadID].joinTimeout);
 
-			// Définir un délai avant l'envoi du message de bienvenue
+			// Déclencher le message de bienvenue après un court délai
 			global.temp.welcomeEvent[threadID].joinTimeout = setTimeout(async function () {
 				const threadData = await threadsData.get(threadID);
 				if (threadData.settings.sendWelcomeMessage == false) return;
@@ -78,53 +74,30 @@ module.exports = {
 				const threadName = threadData.threadName;
 				const userName = [],
 					mentions = [];
-				let multiple = false;
-
-				if (dataAddedParticipants.length > 1) multiple = true;
+				let multiple = dataAddedParticipants.length > 1;
 
 				for (const user of dataAddedParticipants) {
 					if (dataBanned.some((item) => item.id == user.userFbId)) continue;
 					userName.push(user.fullName);
-					mentions.push({
-						tag: user.fullName,
-						id: user.userFbId
-					});
+					mentions.push({ tag: user.fullName, id: user.userFbId });
 				}
 
 				if (userName.length == 0) return;
 				let { welcomeMessage = getLang("defaultWelcomeMessage") } = threadData.data;
-				const form = {
-					mentions: welcomeMessage.match(/\{userNameTag\}/g) ? mentions : null
-				};
+				const form = { mentions: welcomeMessage.includes("{userNameTag}") ? mentions : null };
+
 				welcomeMessage = welcomeMessage
 					.replace(/\{userName\}|\{userNameTag\}/g, userName.join(", "))
 					.replace(/\{boxName\}|\{threadName\}/g, threadName)
-					.replace(
-						/\{multiple\}/g,
-						multiple ? getLang("multiple2") : getLang("multiple1")
-					)
-					.replace(
-						/\{session\}/g,
-						hours <= 10
-							? getLang("session1")
-							: hours <= 12
-								? getLang("session2")
-								: hours <= 18
-									? getLang("session3")
-									: getLang("session4")
-					);
+					.replace(/\{multiple\}/g, multiple ? getLang("multiple2") : getLang("multiple1"))
+					.replace(/\{session\}/g, hours <= 10 ? getLang("session1") : hours <= 12 ? getLang("session2") : hours <= 18 ? getLang("session3") : getLang("session4"));
 
 				form.body = welcomeMessage;
 
 				if (threadData.data.welcomeAttachment) {
 					const files = threadData.data.welcomeAttachment;
-					const attachments = files.reduce((acc, file) => {
-						acc.push(drive.getFile(file, "stream"));
-						return acc;
-					}, []);
-					form.attachment = (await Promise.allSettled(attachments))
-						.filter(({ status }) => status == "fulfilled")
-						.map(({ value }) => value);
+					const attachments = await Promise.allSettled(files.map(file => drive.getFile(file, "stream")));
+					form.attachment = attachments.filter(({ status }) => status == "fulfilled").map(({ value }) => value);
 				}
 				message.send(form);
 				delete global.temp.welcomeEvent[threadID];
