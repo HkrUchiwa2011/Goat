@@ -159,25 +159,30 @@ ${content.message}
     if (command === 'intérêt') {  
         if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
 
-        const interest = Math.floor(balance[userID].bank * 0.05);  
+const cooldowns = {};
 
-        if (interest <= 0) {  
-            message.reply(caseMessage({  
-                title: "🏦 𝗜𝗡𝗧É𝗥Ê𝗧𝗦 🏦",  
-                message: `❌ Votre solde bancaire est trop faible pour générer des intérêts.`  
-            }));  
-            return;  
-        }  
-
-        balance[userID].bank += interest;  
-        saveData();  
-
-        message.reply(caseMessage({  
-            title: "🏦 𝗜𝗡𝗧É𝗥Ê𝗧𝗦 🏦",  
-            message: `✅ Vous avez collecté ${interest}$ d'intérêts !`  
+if (command === 'intérêt') {
+    if (cooldowns[userID] && Date.now() - cooldowns[userID] < 60000) {
+        return message.reply(caseMessage({
+            title: "🏦 𝗜𝗡𝗧É𝗥Ê𝗧𝗦 🏦",
+            message: `❌ Vous devez attendre **1 minute** avant de récolter à nouveau.`
         }));
-        
+    }
+
+    const interest = Math.floor(balance[userID].bank * 0.05);
+    if (interest <= 0) return message.reply(caseMessage({title: "🏦 𝗜𝗡𝗧É𝗥Ê𝗧𝗦 🏦", message: `❌ Solde trop faible.`}));
+
+    balance[userID].bank += interest;
+    saveData();
+    cooldowns[userID] = Date.now(); // Mise à jour du cooldown
+
+    return message.reply(caseMessage({
+        title: "🏦 𝗜𝗡𝗧É𝗥Ê𝗧𝗦 🏦",
+        message: `✅ Vous avez collecté ${formatNumber(interest)}$ d'intérêts !`
+    }));
 }
+        
+
 if (command === 'retirer') {  
     if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
 
