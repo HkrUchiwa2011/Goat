@@ -1,6 +1,29 @@
 const fs = require('fs');
 const balanceFile = 'balance.json';
-const userDataFile = 'users.json'; // Fichier contenant les noms des utilisateurs
+const userDataFile = 'users.json';
+
+// Fonction pour charger les données des utilisateurs
+function loadUserData() {
+    if (!fs.existsSync(userDataFile)) {
+        fs.writeFileSync(userDataFile, JSON.stringify({}, null, 2));
+    }
+    return JSON.parse(fs.readFileSync(userDataFile));
+}
+
+// Fonction pour sauvegarder les données des utilisateurs
+function saveUserData(data) {
+    fs.writeFileSync(userDataFile, JSON.stringify(data, null, 2));
+}
+
+// Fonction pour ajouter un utilisateur dans `users.json`
+function registerUser(userID, userName) {
+    let users = loadUserData();
+    
+    if (!users[userID]) {
+        users[userID] = { name: userName };
+        saveUserData(users);
+    }
+}
 
 module.exports = {
     config: {
@@ -15,6 +38,7 @@ module.exports = {
 
     onStart: async function ({ message, event, args }) {
         const userID = event.senderID;
+registerUser(userID, event.senderID);
 
         if (!fs.existsSync(balanceFile)) {
             fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
