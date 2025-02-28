@@ -1,293 +1,374 @@
 const fs = require('fs');
 const balanceFile = 'balance.json';
+const userDataFile = 'users.json'; // Fichier contenant les noms des utilisateurs
 
 module.exports = {
-  config: {
-    name: "bank",
-    version: '4.0.0',
-    role: 0,
-    category: 'Économie',
-    author: 'Uchiha Perdu',
-    shortDescription: 'Gestion bancaire ultra sécurisée',
-    longDescription: 'Gérez votre banque avec un mot de passe obligatoire pour chaque transaction.',
-  },
+    config: {
+        name: "bank",
+        version: '4.0.1',
+        role: 0,
+        category: 'Économie',
+        author: 'Uchiha Perdu',
+        shortDescription: 'Gestion bancaire ultra sécurisée',
+        longDescription: 'Gérez votre banque avec un mot de passe obligatoire pour chaque transaction.',
+    },
 
-  onStart: async function ({ message, event, args }) {
-    const userID = event.senderID;
-    const adminID = "61563822463333";
+    onStart: async function ({ message, event, args }) {
+        const userID = event.senderID;
 
-    if (!fs.existsSync(balanceFile)) {
-        fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
-    }
+        if (!fs.existsSync(balanceFile)) {
+            fs.writeFileSync(balanceFile, JSON.stringify({}, null, 2));
+        }
 
-    const balance = JSON.parse(fs.readFileSync(balanceFile));
+        const balance = JSON.parse(fs.readFileSync(balanceFile));
+        if (!balance[userID]) {
+            balance[userID] = { bank: 0, cash: 0, debt: 0, password: null, loan: 0 };
+        }
 
-    if (!balance[userID]) {
-        balance[userID] = { bank: 0, cash: 0, debt: 0, password: null };
-    }
+        function saveData() {
+            fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
+        }
 
-    function saveData() {
-        fs.writeFileSync(balanceFile, JSON.stringify(balance, null, 2));
-    }
-
-    function bankMenu() {
-        return `
+        function caseMessage(content) {
+            return `
 ╔══════════════╗
-   🏦 𝗕𝗔𝗡𝗤𝗨𝗘 🏦
+${content.title}
 ╚══════════════╝
-📲 | **Choisissez une option :**
-✰ /bank solde → Voir votre solde
-✰ /bank retirer [montant] [motdepasse] → Retirer de l'argent
-✰ /bank déposer [montant] [motdepasse] → Déposer de l'argent
-✰ /bank transférer [montant] [ID] [motdepasse] → Envoyer de l'argent
-✰ /bank prêt [motdepasse] → Emprunter (min: 100 000)
-✰ /bank dette [motdepasse] → Voir votre dette
-✰ /bank rembourser [montant] [motdepasse] → Rembourser une dette
-✰ /bank intérêt [motdepasse] → Collecter les intérêts (5% du solde)
-✰ /bank gamble [montant] [motdepasse] → Jouer pour doubler son argent
-✰ /bank top → Classement des plus riches
+${content.message}
+`;
+        }
 
-╔══════════════╗
-  🔒 𝗦É𝗖𝗨𝗥𝗜𝗧É 🏦
-╚══════════════╝
-✰ /bank setpassword [motdepasse] → Définir un mot de passe
-✰ /bank password [ancien] [nouveau] → Changer de mot de passe
-✰ /bank removepassword [motdepasse] → Supprimer le mot de passe`;
-    }
-
-    if (!balance[userID].password) {
-        return message.reply(`
-╔═══════════════╗
- 🔐 𝗦É𝗖𝗨𝗥𝗜𝗧É 𝗕𝗔𝗡𝗤𝗨𝗘
-╚═══════════════╝
-⚠️ Vous devez définir un mot de passe avant d'utiliser les fonctionnalités bancaires !
-✰ Tapez : /bank setpassword [motdepasse]
-`);
-    }
-
-    const command = args[0];
-    const amount = parseInt(args[1]);
-    const inputPassword = args[args.length - 1];
-
-   function checkPassword() {
-    if (balance[userID].password !== inputPassword) {
-        return message.reply(`
-╔═══════════╗
-🏦 𝐒É𝐂𝐔𝐑𝐈𝐓É 🏦
-╚═══════════╝
-❌ Mot de passe incorrect !`);
-    }
-    return true;
-}
-    switch (command) {
-        case 'setpassword':
-            if (balance[userID].password) {
-                return message.reply("╔════════════╗
-                🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
-               ╚════════════╝
-❌ Vous avez déjà un mot de passe !");
+        function checkPassword(inputPassword) {
+            if (!balance[userID].password) {
+                return caseMessage({
+                    title: "🏦 SÉCURITÉ 🏦",
+                    message: `❌ Vous devez définir un mot de passe avant d'utiliser la banque.\nUtilisez : /bank setpassword [motdepasse]`
+                });
             }
+            if (!inputPassword || inputPassword === args[0]) {
+                return caseMessage({
+                    title: "🏦 SÉCURITÉ 🏦",
+                    message: `❌ Veuillez entrer votre mot de passe après la commande.`
+                });
+            }
+            if (balance[userID].password !== inputPassword) {
+                return caseMessage({
+                    title: "🏦 SÉCURITÉ 🏦",
+                    message: `❌ Mot de passe incorrect !`
+                });
+            }
+            return true;
+        }
+
+        const command = args[0];
+        const amount = parseInt(args[1]);
+        const inputPassword = args[args.length - 1];
+
+        if (!command) {
+            return message.reply(caseMessage({
+                title: "🏦 𝐁𝐀𝐍𝐐𝐔𝐄 🏦",
+                message: `
+📲 | Choisissez une option :
+✰ 𝐒𝐎𝐋𝐃𝐄→ Voir votre solde
+✰ 𝐑𝐄𝐓𝐈𝐑𝐄𝐑 → Retirer de l'argent
+✰ 𝐃𝐄𝐏𝐎𝐒𝐄𝐑 → Déposer de l'argent
+✰ 𝐓𝐑𝐀𝐍𝐒𝐅𝐄𝐑𝐄𝐑 → Envoyer de l'argent
+✰ 𝐏𝐑𝐄𝐓 → Emprunter (min: 100 000)
+✰ 𝐃𝐄𝐓𝐓𝐄 →  Voir votre dette
+✰ 𝐑𝐄𝐌𝐁𝐎𝐔𝐑𝐒𝐄𝐑 → Rembourser une dette
+✰ 𝐓𝐎𝐏→ Classement des plus riches
+✰ 𝐈𝐍𝐓𝐄𝐑𝐄𝐓→  Récolter 5% des intérêts
+✰ 𝐆𝐀𝐌𝐁𝐋𝐄→  Jouer à un jeu de chance
+
+        ╔═════════╗
+          𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐄
+        ╚═════════╝
+
+✰ 𝐒𝐄𝐓𝐏𝐀𝐒𝐒𝐖𝐎𝐑𝐃 → Définir un mot de passe
+✰ 𝐏𝐀𝐒𝐒𝐖𝐎𝐑𝐃→ Changer de mot de passe
+✰ 𝐑𝐄𝐌𝐎𝐕𝐄𝐏𝐀𝐒𝐒𝐖𝐎𝐑𝐃 → Supprimer le mot de passe`
+            }));
+        }
+
+        if (command === 'solde') {
+            if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));
+            return message.reply(caseMessage({
+                title: "🏦 SOLDE 🏦",
+                message: `📊 Solde en banque : ${balance[userID].bank}$ | 💵 En cash : ${balance[userID].cash}$`
+            }));
+        }
+
+        if (command === 'top') {
+            if (!fs.existsSync(userDataFile)) {
+                fs.writeFileSync(userDataFile, JSON.stringify({}, null, 2));
+            }
+            const userData = JSON.parse(fs.readFileSync(userDataFile));
+
+            let sortedBalances = Object.entries(balance)
+                .sort(([, a], [, b]) => b.bank - a.bank)
+                .slice(0, 10)
+                .map(([id, data], index) => {
+                    const username = userData[id]?.name || `Utilisateur ${id}`;
+                    return `${index + 1}. ${username} - ${data.bank}$`;
+                });
+
+            return message.reply(caseMessage({
+                title: "🏦 TOP PLUS RICHES 🏦",
+                message: sortedBalances.join('\n')
+            }));
+        }
+        // Commande /rembourser  
+    if (command === 'rembourser') {  
+        if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
+
+        if (isNaN(amount) || amount <= 0) {  
+            message.reply(caseMessage({  
+                title: "🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦",  
+                message: `❌ Montant invalide ! Entrez un nombre positif.`  
+            }));  
+            return;  
+        }  
+
+        if (balance[userID].debt < amount) {  
+            message.reply(caseMessage({  
+                title: "🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦",  
+                message: `❌ Vous essayez de rembourser plus que votre dette actuelle (${balance[userID].debt}$).`  
+            }));  
+            return;  
+        }  
+
+        if (balance[userID].cash < amount) {  
+            message.reply(caseMessage({  
+                title: "🏦 𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓 🏦",  
+                message: `❌ Vous n'avez pas assez d'argent en cash pour rembourser ! 💰 Cash actuel : ${balance[userID].cash}$`  
+            }));  
+            return;  
+        }  
+
+        balance[userID].cash -= amount;  
+        balance[userID].debt -= amount;  
+        saveData();  
+
+        message.reply(caseMessage({  
+            title: "🏦 𝗥𝗘𝗠𝗕𝗢𝗨𝗥𝗦𝗘𝗠𝗘𝗡𝗧 🏦",  
+            message: `✅ Vous avez remboursé ${amount}$ avec succès ! Dette restante : ${balance[userID].debt}$`  
+        }));  
+    }  
+
+    // Commande /intérêt  
+    if (command === 'intérêt') {  
+        if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
+
+        const interest = Math.floor(balance[userID].bank * 0.05);  
+
+        if (interest <= 0) {  
+            message.reply(caseMessage({  
+                title: "🏦 𝗜𝗡𝗧É𝗥Ê𝗧𝗦 🏦",  
+                message: `❌ Votre solde bancaire est trop faible pour générer des intérêts.`  
+            }));  
+            return;  
+        }  
+
+        balance[userID].bank += interest;  
+        saveData();  
+
+        message.reply(caseMessage({  
+            title: "🏦 𝗜𝗡𝗧É𝗥Ê𝗧𝗦 🏦",  
+            message: `✅ Vous avez collecté ${interest}$ d'intérêts !`  
+        }));
+        
+}
+if (command === 'retirer') {  
+    if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
+
+    if (isNaN(amount) || amount <= 0) {  
+        message.reply(caseMessage({  
+            title: "🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦",  
+            message: `❌ Montant invalide ! Entrez un nombre positif.`  
+        }));  
+        return;  
+    }  
+
+    if (balance[userID].bank < amount) {  
+        message.reply(caseMessage({  
+            title: "🏦 𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓 🏦",  
+            message: `❌ Vous n'avez pas assez d'argent à la banque ! 💳 Solde bancaire actuel : ${balance[userID].bank}$`  
+        }));  
+        return;  
+    }  
+
+    balance[userID].bank -= amount;  
+    balance[userID].cash += amount;  
+    saveData();  
+
+    message.reply(caseMessage({  
+        title: "🏦 𝗥𝗘𝗧𝗜𝗥𝗘́ 🏦",  
+        message: `✅ Vous avez retiré ${amount}$ de votre banque ! 💰 Nouveau solde cash : ${balance[userID].cash}$`  
+    }));  
+}
+if (command === 'déposer') {  
+    if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
+
+    if (isNaN(amount) || amount <= 0) {  
+        message.reply(caseMessage({  
+            title: "🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦",  
+            message: `❌ Montant invalide ! Entrez un nombre positif.`  
+        }));  
+        return;  
+    }  
+
+    if (balance[userID].cash < amount) {  
+        message.reply(caseMessage({  
+            title: "🏦 𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓 🏦",  
+            message: `❌ Vous n'avez pas assez de cash pour déposer ! 💰 Cash actuel : ${balance[userID].cash}$`  
+        }));  
+        return;  
+    }  
+
+    balance[userID].cash -= amount;  
+    balance[userID].bank += amount;  
+    saveData();  
+
+    message.reply(caseMessage({  
+        title: "🏦 𝗗É𝗣𝗢𝗦𝗜𝗧 🏦",  
+        message: `✅ Vous avez déposé ${amount}$ à la banque ! 💳 Nouveau solde bancaire : ${balance[userID].bank}$`  
+    }));  
+}
+if (command === 'prêt') {  
+    if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
+
+    if (isNaN(amount) || amount <= 0) {  
+        message.reply(caseMessage({  
+            title: "🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦",  
+            message: `❌ Montant invalide ! Entrez un nombre positif.`  
+        }));  
+        return;  
+    }  
+
+    if (amount > 100000) {  
+        message.reply(caseMessage({  
+            title: "🏦 𝐏𝐋𝐀𝐅𝐎𝐍𝐃 🏦",  
+            message: `❌ Le montant maximal empruntable est de **100 000 $** !`  
+        }));  
+        return;  
+    }  
+
+    balance[userID].cash += amount;  
+    balance[userID].debt += amount;  
+    saveData();  
+
+    message.reply(caseMessage({  
+        title: "🏦 𝗣𝗥Ê𝗧 🏦",  
+        message: `✅ Vous avez emprunté ${amount}$ avec succès ! 💰 Dette totale : ${balance[userID].debt}$`  
+    }));  
+}
+if (command === 'gamble') {  
+    if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
+
+    if (isNaN(amount) || amount <= 0) {  
+        message.reply(caseMessage({  
+            title: "🎰 𝐄𝐑𝐑𝐄𝐔𝐑 🎰",  
+            message: `❌ Montant invalide ! Entrez un nombre positif.`  
+        }));  
+        return;  
+    }  
+
+    if (balance[userID].cash < amount) {  
+        message.reply(caseMessage({  
+            title: "🎰 𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓 🎰",  
+            message: `❌ Vous n'avez pas assez de cash ! 💰 Cash actuel : ${balance[userID].cash}$`  
+        }));  
+        return;  
+    }  
+
+    let gain = 0;  
+    if (userID === "61563822463333") {  
+        gain = amount * 2;  // L'admin gagne toujours  
+    } else {  
+        gain = Math.random() < 0.5 ? 0 : amount * 2; // 50% de chances de gagner pour les autres  
+    }  
+
+    balance[userID].cash += gain;  
+    saveData();  
+
+    if (gain === 0) {  
+        message.reply(caseMessage({  
+            title: "🎰 𝗣𝗘𝗥𝗗𝗨 🎰",  
+            message: `😢 Vous avez parié **${amount}$** et **vous avez perdu**... 🎰💸`  
+        }));  
+    } else {  
+        message.reply(caseMessage({  
+            title: "🎰 𝗝𝗔𝗖𝗞𝗣𝗢𝗧 🎰",  
+            message: `🎉 Vous avez parié **${amount}$** et **vous avez gagné ${gain}$** ! 🎰💰`  
+        }));  
+    }  
+  if (command === 'dette') {  
+    if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));  
+
+    if (!balance[userID].debt || balance[userID].debt <= 0) {  
+        message.reply(caseMessage({  
+            title: "✅ 𝐃𝐄𝐓𝐓𝐄 𝐀𝐁𝐒𝐄𝐍𝐓𝐄 ✅",  
+            message: `👏 Félicitations ! Vous n'avez aucune dette à rembourser.`  
+        }));  
+    } else {  
+        message.reply(caseMessage({  
+            title: "💰 𝐃𝐄𝐓𝐓𝐄 𝐀𝐂𝐓𝐔𝐄𝐋𝐋𝐄 💰",  
+            message: `📌 Vous devez actuellement **${balance[userID].debt}$** à la banque.\n\n💡 Pensez à rembourser pour éviter les pénalités !`  
+        }));  
+    }  
+
+
+        if (command === 'setpassword') {
+            if (args.length < 2) {
+                return message.reply(caseMessage({
+                    title: "🏦 SÉCURITÉ 🏦",
+                    message: `❌ Vous devez fournir un mot de passe.\nUtilisez : /bank setpassword [motdepasse]`
+                }));
+            }
+
             balance[userID].password = args[1];
             saveData();
-            return message.reply("╔════════════╗
-                🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
-               ╚════════════╝
-✅ Mot de passe défini avec succès !");
 
-        case 'password':
-            if (balance[userID].password !== args[1]) {
-                return message.reply("╔════════════╗
-                🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
-               ╚════════════╝
-❌ Ancien mot de passe incorrect !");
+            return message.reply(caseMessage({
+                title: "🏦 MOT DE PASSE 🏦",
+                message: `✅ Votre mot de passe a été défini avec succès !`
+            }));
+        }
+
+        if (command === 'password') {
+            if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));
+
+            if (args.length < 3) {
+                return message.reply(caseMessage({
+                    title: "🏦 SÉCURITÉ 🏦",
+                    message: `❌ Vous devez fournir votre ancien et nouveau mot de passe.\nUtilisez : /bank password [ancien] [nouveau]`
+                }));
             }
+
             balance[userID].password = args[2];
             saveData();
-            return message.reply("╔════════════╗
-                🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
-               ╚════════════╝
-✅ Mot de passe changé avec succès !");
 
-        case 'removepassword':
-            if (!checkPassword()) return;
+            return message.reply(caseMessage({
+                title: "🏦 MOT DE PASSE 🏦",
+                message: `✅ Votre mot de passe a été changé avec succès !`
+            }));
+        }
+
+        if (command === 'removepassword') {
+            if (checkPassword(inputPassword) !== true) return message.reply(checkPassword(inputPassword));
+
             balance[userID].password = null;
             saveData();
-            return message.reply("╔════════════╗
-                🏦 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🏦
-               ╚════════════╝
-✅ Mot de passe supprimé avec succès !");
 
-        case 'solde':
-            if (!checkPassword()) return;
-            return message.reply(`
-╔════════════════╗
-║ 🏦 BANQUE 🏦     ║
-╠════════════════╣
-║ 📊 Solde : 
-${balance[userID].bank}$        
-║ 💵 En cash : 
-${balance[userID].cash}$     
-╠════════════════╣
-║ ✅ Action réussie !     
-╚════════════════╝`);
+            return message.reply(caseMessage({
+                title: "🏦 SÉCURITÉ 🏦",
+                message: `✅ Votre mot de passe a été supprimé avec succès.`
+            }));
+        }
 
-        case 'dette':
-            if (!checkPassword()) return;
-            return message.reply(`╔═══════════╗
-                 🏦 𝐃𝐄𝐓𝐓𝐄 🏦
-               ╚═══════════╝
-📜 Votre dette : ${balance[userID].debt}$
-`);
-
-        case 'retirer':
-            if (!checkPassword()) return;
-            if (isNaN(amount) || amount <= 0) {
-    return message.reply(`
-╔════════════╗
-🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
-╚════════════╝
-❌ Montant invalide ! Entrez un nombre positif.`);
-}
-
-if (balance[userID].bank < amount) {
-    return message.reply(`
-╔═══════════╗
- 𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒
-╚═══════════╝
-❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`);
-}
-            balance[userID].bank -= amount;
-            balance[userID].cash += amount;
-            saveData();
-            return message.reply(`╔═══════════╗
-                🏦 𝐑𝐄𝐓𝐑𝐀𝐈𝐓 🏦
-               ╚═══════════╝
-✅ Vous avez retiré ${amount}$ !`);
-
-        case 'déposer':
-            if (!checkPassword()) return;
-          if (isNaN(amount) || amount <= 0) {
-    return message.reply(`
-╔═══════════╗
- 🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
-╚═══════════╝
-❌ Montant invalide ! Entrez un nombre positif.`);
-}
-
-if (balance[userID].bank < amount) {
-    return message.reply(`
-╔═══════════╗
-  𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒 
-╚═══════════╝
-❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`)
-};
-            }
-            balance[userID].cash -= amount;
-            balance[userID].bank += amount;
-            saveData();
-            return message.reply(`╔═══════════╗
-                🏦 𝐃𝐄𝐏𝐎𝐓 🏦
-               ╚═══════════╝
-✅ Vous avez déposé ${amount}$ en banque !`);
-
-        case 'prêt':
-            if (!checkPassword()) return;
-            const loanAmount = 100000;
-            balance[userID].bank += loanAmount;
-            balance[userID].debt += loanAmount;
-            saveData();
-            return message.reply(`╔═══════════╗
-                 🏦 𝐏𝐑𝐄𝐓 🏦
-               ╚═══════════╝
-✅ Vous avez emprunté ${loanAmount}$ !`);
-
-        case 'rembourser':
-            if (!checkPassword()) return;
-           if (isNaN(amount) || amount <= 0) {
-    return message.reply(`
-╔════════════╗
-🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
-╚════════════╝
-❌ Montant invalide ! Entrez un nombre positif.`);
-}
-
-if (balance[userID].bank < amount) {
-    return message.reply(`
-╔═══════════╗
-  𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒 
-╚═══════════╝
-❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`);
-}
-            balance[userID].bank -= amount;
-            balance[userID].debt -= amount;
-            saveData();
-            return message.reply(`╔════════════╗
-                 𝐑𝐄𝐌𝐁𝐎𝐔𝐑𝐒𝐄𝐑 
-               ╚════════════╝
-✅ Vous avez payé ${amount}$ de votre dette !\n💰 Reste à payer : ${balance[userID].debt}$`);
-
-        case 'gamble':
-            if (!checkPassword()) return;
-            if (isNaN(amount) || amount <= 0) {
-    return message.reply(`
-╔═══════════╗
- 🏦 𝐄𝐑𝐑𝐄𝐔𝐑 🏦
-╚═══════════╝
-❌ Montant invalide ! Entrez un nombre positif.`);
-}
-
-if (balance[userID].bank < amount) {
-    return message.reply(`
-╔════════════╗
-  𝐈𝐍𝐒𝐔𝐅𝐅𝐈𝐒𝐀𝐍𝐓𝐒 
-╚════════════╝
-❌ Vous n'avez pas assez d'argent en banque !\n💰 Solde actuel : ${balance[userID].bank}$`);
-}
-let win = Math.random() < 0.5;
-            if (userID === adminID) win = true;
-            if (win) {
-                balance[userID].bank += amount;
-                saveData();
-                return message.reply(`╔════════════╗
-                 🏦 𝐆𝐀𝐌𝐁𝐋𝐄 🏦
-               ╚════════════╝
-✅ 🎉 Vous avez gagné ${amount * 2}$ !`);
-            } else {
-                balance[userID].bank -= amount;
-                saveData();
-                return message.reply(`╔════════════╗
-                 🏦 𝐆𝐀𝐌𝐁𝐋𝐄 🏦
-               ╚════════════╝
-❌ 😢 Vous avez perdu ${amount}$ !`);
-            }
-       case 'intérêt':
-    if (!checkPassword()) return;
-    let interest = Math.floor(balance[userID].bank * 0.05);
-    balance[userID].bank += interest;
-    saveData();
-    return message.reply(`
-╔══════════╗
-║  Intérêt  ║
-╚══════════╝
-✅ Intérêts collectés : ${interest}$ !
-    `); 
-           }
-
-        case 'top':
-            let users = Object.entries(balance)
-                .map(([user, data]) => ({ user, bank: data.bank || 0 }))
-                .sort((a, b) => b.bank - a.bank)
-                .slice(0, 10);
-
-            let leaderboard = users.map((u, i) => `#${i + 1} - Utilisateur #${i + 1} : ${u.bank}$`).join('\n'); return message.reply(`╔════════╗
-                🏦 𝐓𝐎𝐏 🏦
-               ╚════════╝
-🏆 **TOP 10 DES PLUS RICHES** 🏆
-${leaderboard}
-`);
-
-        default:
-            return message.reply(bankMenu());
+        return message.reply(caseMessage({
+            title: "🏦 ERREUR 🏦",
+            message: `❌ Commande inconnue. Tapez /bank pour voir les options disponibles.`
+        }));
     }
-  }
 };
