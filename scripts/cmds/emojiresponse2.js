@@ -104,7 +104,7 @@ module.exports = {
       }
     };
 
-    if (responses[emoji]) {
+       if (responses[emoji]) {
       const replyList = userID === adminID ? responses[emoji].admin : responses[emoji].user;
       const reply = replyList[Math.floor(Math.random() * replyList.length)];
       return message.reply(reply);
