@@ -1,5 +1,9 @@
 const fs = require("fs");
-const balanceFile = "balance.json";
+const hackersFile = "hackers.json";
+
+if (!fs.existsSync(hackersFile)) {
+    fs.writeFileSync(hackersFile, JSON.stringify({}, null, 2), "utf8");
+}
 
 module.exports = {
     config: {
@@ -26,23 +30,14 @@ module.exports = {
             return message.reply("❌ **Mauvaise réponse !**\nRéessaye... Qui est le créateur de l'univers ?");
         }
 
-        let bankData = {};
-        try {
-            bankData = JSON.parse(fs.readFileSync(balanceFile));
-        } catch (error) {
-            console.error("Erreur lecture balance.json", error);
-        }
+        let hackers = JSON.parse(fs.readFileSync(hackersFile));
 
-        if (!bankData[userID]) {
-            bankData[userID] = { cash: 0, bank: 0, debt: 0, secured: false, hacker: false };
-        }
-
-        if (bankData[userID].hacker) {
+        if (hackers[userID]) {
             return message.reply("⚠️ **Tu es déjà hackeur !** Pas besoin de refaire le test.");
         }
 
-        bankData[userID].hacker = true;
-        fs.writeFileSync(balanceFile, JSON.stringify(bankData, null, 2));
+        hackers[userID] = true;
+        fs.writeFileSync(hackersFile, JSON.stringify(hackers, null, 2));
 
         return message.reply("🎉 **Félicitations !** Tu es maintenant un hackeur !\nUtilise `/hack2` pour pirater des banques. 😈");
     }
