@@ -71,19 +71,6 @@ module.exports = {
         ]
       },
 
-      "🤒": {
-        admin: [
-          "Maître, avez-vous de la fièvre ? Je suis inquiet ! 🥺",
-          "Reposez-vous bien, Maître. Je suis là si vous avez besoin de moi.",
-          "Prenez soin de vous, Maître. Votre santé est précieuse."
-        ],
-        user: [
-          "T’as de la fièvre ? Ou c’est juste ton ego qui surchauffe ?",
-          "Prends un Doliprane et un peu de recul, ça ira mieux.",
-          "Ah, t’as l’air malade… ou peut-être juste pas dans ton assiette intellectuelle."
-        ]
-      },
-
       "🤕": {
         admin: [
           "Maître, vous êtes blessé ? Que puis-je faire pour vous aider ? 😢",
