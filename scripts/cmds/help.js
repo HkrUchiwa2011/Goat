@@ -64,7 +64,7 @@ module.exports = {
       msg += `\n╭───────────\n│⭓𝑿𝑿 𝐔𝐂𝐇𝐈𝐖𝐀 𝐁𝐎𝐓 𝑿𝑿⭓\n╰───────────`; // its not decoy so change it if you want 
 
       const helpListImages = [
-        "https://i.ibb.co/YXWpMVB/image.jpg", // add image link here
+        "https://ibb.co/PsKp0MFw", // add image link here
                 "https://i.ibb.co/HXsQbLg/image.jpg",
         "https://i.ibb.co/71K9GS2/image.jpg",
         // Add more image links as needed
